@@ -1,0 +1,50 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+
+# production
+build/
+
+# environment
+.env
+.env.local
+.env*.local
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# logs
+*.log
+npm-debug.log*
+debug.log
+
+# misc
+*.pem
+*.cert
+
+# vercel
+.vercel
+
+# turbo
+.turbo/
+
+# internal docs (don't push)
+/AGENTS.md
+/IMPLEMENTATION_PLAN.md

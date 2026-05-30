@@ -1,0 +1,211 @@
+import type { Metadata, Viewport } from 'next';
+import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
+import './globals.css';
+import { ThemeProvider } from '@/lib/utils/theme';
+import { AuthProvider } from '@/components/providers/AuthProvider';
+import { ToastProvider } from '@/components/shared/toast';
+import { ParticleContainer } from '@/components/particles/ParticleContainer';
+import { ChunkErrorHandler } from '@/components/shared/ChunkErrorHandler';
+
+const SITE_URL = 'https://tavryneai.vercel.app';
+const SITE_NAME = 'Tavryne AI';
+const SITE_DESCRIPTION = 'Turn any idea into a working app through conversation. Tavryne AI is the browser-based AI vibe coding platform that generates production-ready code with natural language. Free tier with 10,000 tokens daily. No credit card needed.';
+const OG_IMAGE = '/preview.png';
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-heading',
+  display: 'swap',
+  preload: true,
+});
+
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+  preload: true,
+});
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#11111b',
+};
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  applicationName: 'Tavryne AI',
+  title: {
+    default: 'Tavryne AI — AI Vibe Coding Platform | Turn Ideas Into Apps',
+    template: '%s | Tavryne AI',
+  },
+  description: SITE_DESCRIPTION,
+  keywords: [
+    'Tavryne AI',
+    'Tavryne',
+    'TavryneAI',
+    'Tavryne Vibe Code',
+    'Tavryne AI IDE',
+    'Tavryne Coding AI',
+    'Tavryne AI Platform',
+    'vibe coding platform',
+    'AI coding assistant',
+    'AI development environment',
+    'browser-based AI IDE',
+    'natural language programming',
+    'AI code generation',
+    'conversational coding',
+    'AI SaaS builder',
+    'Next.js app builder',
+    'no-code AI platform',
+    'generative AI development',
+  ],
+  authors: [
+    { name: 'Tavryne AI', url: SITE_URL },
+  ],
+  creator: 'Tavryne AI',
+  publisher: 'Tavryne AI',
+  category: 'technology',
+  classification: 'AI Development Platform',
+  referrer: 'origin-when-cross-origin',
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  alternates: {
+    canonical: SITE_URL,
+    languages: { 'en-US': SITE_URL },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: SITE_URL,
+    siteName: 'Tavryne AI',
+    title: 'Tavryne AI — AI Vibe Coding Platform | Turn Ideas Into Apps',
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: 'Tavryne AI — Browser-Based AI Vibe Coding Platform',
+      },
+    ],
+    countryName: 'United States',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@tavryneai',
+    creator: '@tavryneai',
+    title: 'Tavryne AI — AI Vibe Coding Platform | Turn Ideas Into Apps',
+    description: SITE_DESCRIPTION,
+    images: [OG_IMAGE],
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'Tavryne AI',
+    statusBarStyle: 'black-translucent',
+  },
+  appLinks: {
+    web: {
+      url: SITE_URL,
+      should_fallback: true,
+    },
+  },
+  other: {
+    'google-site-verification': 'YOUR_GOOGLE_VERIFICATION_CODE',
+    'msvalidate.01': 'YOUR_BING_VERIFICATION_CODE',
+    'yandex-verification': 'YOUR_YANDEX_VERIFICATION_CODE',
+  },
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning className={`${jakarta.variable} ${mono.variable}`}>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
+        <link rel="mask-icon" href="/favicon.svg" color="#cba6f7" />
+        <meta name="msapplication-TileColor" content="#11111b" />
+        <meta name="msapplication-TileImage" content="/favicon.png" />
+        <meta name="theme-color" content="#11111b" />
+
+        <link rel="preconnect" href="https://firestore.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+        <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var theme = localStorage.getItem('tavryne-theme');
+                if (!theme) theme = 'dark';
+                document.documentElement.classList.remove('light', 'dark');
+                document.documentElement.classList.add(theme);
+
+                var colorTheme = localStorage.getItem('tavryne-color-theme') || 'default';
+                var colorMap = {
+                  default: {'--primary':'262 83% 58%','--primary-foreground':'0 0% 100%','--ring':'262 83% 58%','--chart-1':'262 83% 58%','--accent-foreground':'262 83% 58%','--primary-fixed':'243 100% 94%','--primary-fixed-dim':'242 100% 88%','--on-primary-fixed':'244 100% 21%','--gradient-from':'262 83% 58%','--gradient-to':'239 84% 67%'},
+                  forest: {'--primary':'142 76% 36%','--primary-foreground':'0 0% 100%','--ring':'142 76% 36%','--chart-1':'142 76% 36%','--accent-foreground':'142 76% 36%','--primary-fixed':'140 78% 94%','--primary-fixed-dim':'138 78% 88%','--on-primary-fixed':'142 100% 21%','--gradient-from':'142 76% 36%','--gradient-to':'160 84% 39%'},
+                  ocean: {'--primary':'199 89% 48%','--primary-foreground':'0 0% 100%','--ring':'199 89% 48%','--chart-1':'199 89% 48%','--accent-foreground':'199 89% 48%','--primary-fixed':'200 90% 94%','--primary-fixed-dim':'198 88% 88%','--on-primary-fixed':'200 100% 21%','--gradient-from':'199 89% 48%','--gradient-to':'217 89% 61%'},
+                  sunset: {'--primary':'346 83% 55%','--primary-foreground':'0 0% 100%','--ring':'346 83% 55%','--chart-1':'346 83% 55%','--accent-foreground':'346 83% 55%','--primary-fixed':'345 84% 94%','--primary-fixed-dim':'344 82% 88%','--on-primary-fixed':'346 100% 21%','--gradient-from':'346 83% 55%','--gradient-to':'15 90% 55%'},
+                  monochrome: {'--primary':'0 0% 45%','--primary-foreground':'0 0% 100%','--ring':'0 0% 45%','--chart-1':'0 0% 45%','--accent-foreground':'0 0% 55%','--primary-fixed':'0 0% 94%','--primary-fixed-dim':'0 0% 88%','--on-primary-fixed':'0 0% 21%','--gradient-from':'0 0% 45%','--gradient-to':'0 0% 25%'},
+                  midnight: {'--primary':'230 70% 50%','--primary-foreground':'0 0% 100%','--ring':'230 70% 50%','--chart-1':'230 70% 50%','--accent-foreground':'230 70% 50%','--primary-fixed':'228 72% 94%','--primary-fixed-dim':'226 70% 88%','--on-primary-fixed':'230 100% 21%','--gradient-from':'230 70% 50%','--gradient-to':'260 70% 50%'},
+                  rose: {'--primary':'340 82% 52%','--primary-foreground':'0 0% 100%','--ring':'340 82% 52%','--chart-1':'340 82% 52%','--accent-foreground':'340 82% 52%','--primary-fixed':'340 80% 94%','--primary-fixed-dim':'338 78% 88%','--on-primary-fixed':'340 100% 21%','--gradient-from':'340 82% 52%','--gradient-to':'330 80% 60%'},
+                  amber: {'--primary':'38 92% 50%','--primary-foreground':'0 0% 100%','--ring':'38 92% 50%','--chart-1':'38 92% 50%','--accent-foreground':'38 92% 50%','--primary-fixed':'40 90% 94%','--primary-fixed-dim':'38 88% 88%','--on-primary-fixed':'38 100% 21%','--gradient-from':'38 92% 50%','--gradient-to':'30 85% 55%'},
+                  teal: {'--primary':'180 80% 35%','--primary-foreground':'0 0% 100%','--ring':'180 80% 35%','--chart-1':'180 80% 35%','--accent-foreground':'180 80% 35%','--primary-fixed':'182 82% 94%','--primary-fixed-dim':'180 80% 88%','--on-primary-fixed':'180 100% 21%','--gradient-from':'180 80% 35%','--gradient-to':'190 85% 40%'},
+                  violet: {'--primary':'270 75% 55%','--primary-foreground':'0 0% 100%','--ring':'270 75% 55%','--chart-1':'270 75% 55%','--accent-foreground':'270 75% 55%','--primary-fixed':'268 76% 94%','--primary-fixed-dim':'266 74% 88%','--on-primary-fixed':'270 100% 21%','--gradient-from':'270 75% 55%','--gradient-to':'280 80% 60%'},
+                  lime: {'--primary':'120 60% 40%','--primary-foreground':'0 0% 100%','--ring':'120 60% 40%','--chart-1':'120 60% 40%','--accent-foreground':'120 60% 40%','--primary-fixed':'118 62% 94%','--primary-fixed-dim':'116 60% 88%','--on-primary-fixed':'120 100% 21%','--gradient-from':'120 60% 40%','--gradient-to':'100 65% 45%'}
+                };
+                var colors = colorMap[colorTheme] || colorMap.default;
+                var root = document.documentElement;
+                for (var key in colors) {
+                  if (colors.hasOwnProperty(key)) {
+                    root.style.setProperty(key, colors[key]);
+                  }
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
+      <body className="font-sans antialiased">
+        <ChunkErrorHandler>
+          <ThemeProvider>
+            <AuthProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </ChunkErrorHandler>
+        <ParticleContainer />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js').catch(() => {});
+                });
+              }
+            `,
+          }}
+        />
+      </body>
+    </html>
+  );
+}

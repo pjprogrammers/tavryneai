@@ -1,0 +1,38 @@
+{
+  "name": "Tavryne AI — AI Vibe Coding Platform",
+  "short_name": "Tavryne AI",
+  "description": "Turn any idea into a working app through conversation with Tavryne AI. Browser-based AI coding platform powered by NVIDIA NIM, OpenCode Zen, and OpenRouter.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#11111b",
+  "theme_color": "#cba6f7",
+  "orientation": "any",
+  "categories": ["development", "productivity", "ai", "developer tools"],
+  "lang": "en-US",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

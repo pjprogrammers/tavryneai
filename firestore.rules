@@ -1,0 +1,196 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================================
+    // CONSTANTS
+    // ============================================================
+    // Valid project status values (soft-delete via 'deleted')
+    let PROJECT_STATUSES = ['active', 'deleted', 'archived'];
+
+    // Server-managed fields that clients must never write on users
+    let USER_SERVER_FIELDS = [
+      'tokensUsedToday', 'totalTokensConsumed', 'tokenResetDate',
+      'lastIpAddress', 'lastUserAgent', 'signUpIp',
+    ];
+
+    // Server-managed fields on projects
+    let PROJECT_SERVER_FIELDS = [
+      'tokenCount', 'createdAt', 'updatedAt',
+    ];
+
+    // ============================================================
+    // HELPER FUNCTIONS
+    // ============================================================
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuth() && request.auth.token.admin == true;
+    }
+
+    function isProjectOwner(projectId) {
+      return isAuth()
+        && get(/databases/$(database)/documents/projects/$(projectId)).data.userId
+             == request.auth.uid;
+    }
+
+    function noServerFields(serverFields) {
+      return !request.resource.data.keys().hasAny(serverFields);
+    }
+
+    function immutableFields(disallowed) {
+      return !request.resource.data.keys().hasAny(disallowed);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches('^[^@]+@[^@]+\\.[^@]+$');
+    }
+
+    function isNonEmptyString(value) {
+      return value is string && value.size() > 0;
+    }
+
+    function isValidTimestamp(value) {
+      return value is timestamp;
+    }
+
+    // ============================================================
+    // USERS
+    // ============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+
+      // Self-registration with required fields and email validation
+      allow create: if isOwner(userId)
+        && request.resource.data.uid == userId
+        && request.resource.data.keys().hasAll(['uid', 'email', 'displayName', 'createdAt'])
+        && isValidEmail(request.resource.data.email)
+        && request.resource.data.email is string
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 100
+        && isValidTimestamp(request.resource.data.createdAt)
+        && noServerFields(USER_SERVER_FIELDS);
+
+      // Self-update; cannot change uid or server-managed fields
+      allow update: if isOwner(userId)
+        && noServerFields(USER_SERVER_FIELDS)
+        && immutableFields(['uid'])
+        && (!request.resource.data.keys().hasAny(['email']) || isValidEmail(request.resource.data.email))
+        && (!request.resource.data.keys().hasAny(['displayName']) || (
+          request.resource.data.displayName is string
+          && request.resource.data.displayName.size() <= 100
+        ));
+
+      // No hard deletes — managed server-side
+      allow delete: if false;
+    }
+
+    // ============================================================
+    // PROJECTS
+    // ============================================================
+
+    match /projects/{projectId} {
+      // Owner reads own projects; public projects readable by any auth user
+      allow read: if isAuth()
+        && (resource.data.userId == request.auth.uid || resource.data.isPublic == true);
+
+      // Create: must be auth, own the project, supply required fields
+      allow create: if isAuth()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasAll(['userId', 'title', 'status'])
+        && isNonEmptyString(request.resource.data.title)
+        && request.resource.data.title.size() <= 200
+        && request.resource.data.status in PROJECT_STATUSES
+        && request.resource.data.status == 'active'
+        && noServerFields(PROJECT_SERVER_FIELDS);
+
+      // Update: owner only; cannot change userId; status must be valid
+      allow update: if isAuth()
+        && resource.data.userId == request.auth.uid
+        && noServerFields(PROJECT_SERVER_FIELDS)
+        && immutableFields(['userId'])
+        && (!request.resource.data.keys().hasAny(['status'])
+            || request.resource.data.status in PROJECT_STATUSES);
+
+      // No hard deletes — use status: 'deleted'
+      allow delete: if false;
+
+      // ----- MESSAGES (subcollection) -----
+      match /messages/{messageId} {
+        allow read: if isProjectOwner(projectId);
+        allow create: if isProjectOwner(projectId)
+          && request.resource.data.keys().hasAll(['role', 'content', 'timestamp'])
+          && request.resource.data.role in ['user', 'assistant']
+          && isNonEmptyString(request.resource.data.content)
+          && request.resource.data.content.size() <= 100000
+          && isValidTimestamp(request.resource.data.timestamp);
+
+        // Messages are immutable after creation (history integrity)
+        allow update, delete: if false;
+
+        // ----- FEEDBACK (sub-subcollection) -----
+        match /feedback/{feedbackId} {
+          allow read: if isProjectOwner(projectId);
+          allow create: if isProjectOwner(projectId)
+            && request.resource.data.keys().hasAll(['userId', 'filename', 'status', 'timestamp'])
+            && request.resource.data.status in ['accepted', 'rejected']
+            && request.resource.data.userId == request.auth.uid
+            && isValidTimestamp(request.resource.data.timestamp);
+          allow update, delete: if false;
+        }
+      }
+
+      // ----- SNAPSHOTS (subcollection) -----
+      match /snapshots/{snapshotId} {
+        allow read: if isProjectOwner(projectId);
+        allow create: if isProjectOwner(projectId)
+          && request.resource.data.keys().hasAll(['files', 'timestamp'])
+          && request.resource.data.files is list
+          && request.resource.data.files.size() <= 500
+          && isValidTimestamp(request.resource.data.timestamp);
+        allow update, delete: if false;
+      }
+
+      // ----- PROVIDER STATS (subcollection, server-written) -----
+      match /provider_stats/{statId} {
+        allow read: if isProjectOwner(projectId) || isAdmin();
+        allow create: if isAdmin();
+        allow update: if isAdmin();
+        allow delete: if false;
+      }
+    }
+
+    // ============================================================
+    // USER ACTIVITY (server-written)
+    // ============================================================
+
+    match /user_activity/{activityId} {
+      // Users can read their own activity; admins can read all
+      allow read, list: if isAuth()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      // Only written by server (Admin SDK bypasses rules)
+      // Allow admin writes explicitly; prevent client writes
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // ============================================================
+    // GENERATION ERRORS (server-written, admin-read)
+    // ============================================================
+
+    match /generation_errors/{errorId} {
+      allow read, list: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+  }
+}
