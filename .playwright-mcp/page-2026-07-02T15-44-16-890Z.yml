@@ -1,0 +1,57 @@
+- main [ref=f8e3]:
+  - generic [ref=f8e5]:
+    - generic [ref=f8e7]:
+      - button [ref=f8e8] [cursor=pointer]:
+        - img [ref=f8e9]
+      - generic [ref=f8e11]:
+        - heading "Deployment" [level=1] [ref=f8e12]
+        - paragraph [ref=f8e13]: Export your project and deploy to Vercel
+    - generic [ref=f8e14]:
+      - generic [ref=f8e15]:
+        - generic [ref=f8e16]:
+          - heading "Export Project" [level=3] [ref=f8e17]
+          - paragraph [ref=f8e18]: Download your project as a JSON export
+        - generic [ref=f8e19]:
+          - paragraph [ref=f8e20]: Export all project files and metadata. Import into any Next.js project or deploy to Vercel.
+          - separator [ref=f8e21]
+          - button "Export Project" [ref=f8e22] [cursor=pointer]
+      - generic [ref=f8e23]:
+        - generic [ref=f8e24]:
+          - heading "Deploy to Vercel" [level=3] [ref=f8e25]
+          - paragraph [ref=f8e26]: One-click deployment to Vercel
+        - generic [ref=f8e27]:
+          - generic [ref=f8e28]:
+            - text: Project name
+            - textbox "Project name" [ref=f8e29]: my-tavryne-project
+          - generic [ref=f8e30]:
+            - text: Framework
+            - textbox "Framework" [disabled] [ref=f8e31]: Next.js
+          - generic [ref=f8e32]:
+            - generic [ref=f8e33]:
+              - paragraph [ref=f8e34]: Auto-deploy on changes
+              - paragraph [ref=f8e35]: Coming soon with GitHub integration
+            - switch [disabled] [ref=f8e36]
+          - separator [ref=f8e37]
+          - paragraph [ref=f8e38]: Export your project first, then import the files into a new Vercel project.
+          - button "Open Vercel" [ref=f8e39] [cursor=pointer]:
+            - img [ref=f8e40]
+            - text: Open Vercel
+    - generic [ref=f8e42]:
+      - generic [ref=f8e43]:
+        - heading "Deployment Instructions" [level=3] [ref=f8e44]
+        - paragraph [ref=f8e45]: How to deploy your project
+      - generic [ref=f8e46]:
+        - list [ref=f8e47]:
+          - listitem [ref=f8e48]:
+            - text: Click
+            - strong [ref=f8e49]: Export Project
+            - text: to download your project files
+          - listitem [ref=f8e50]: Create a new repository on GitHub and push the exported files
+          - listitem [ref=f8e51]:
+            - text: Go to
+            - strong [ref=f8e52]: Vercel
+            - text: and import your GitHub repository
+          - listitem [ref=f8e53]: Vercel will auto-detect Next.js and deploy your project
+          - listitem [ref=f8e54]: Your app will be live at a vercel.app domain
+        - separator [ref=f8e55]
+        - paragraph [ref=f8e56]: GitHub sync and one-click deploy coming soon. Your code is yours — export anytime.

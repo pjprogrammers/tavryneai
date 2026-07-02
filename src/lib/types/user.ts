@@ -28,6 +28,7 @@ export interface User {
   planType: PlanType;
   projectCount: number;
   isActive?: boolean;
+  isAdmin?: boolean;
   preferences?: UserPreferences;
 }
 

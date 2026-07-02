@@ -45,8 +45,6 @@ interface EditorState {
   // --- 3. Session Sharing ---
   shareDialogOpen: boolean;
   setShareDialogOpen: (open: boolean) => void;
-  shareUrl: string | null;
-  setShareUrl: (url: string | null) => void;
 
   // --- 5. Screenshot Input ---
   pendingScreenshots: string[];
@@ -142,8 +140,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   // Session Sharing
   shareDialogOpen: false,
   setShareDialogOpen: (open) => set({ shareDialogOpen: open }),
-  shareUrl: null,
-  setShareUrl: (url) => set({ shareUrl: url }),
 
   // Screenshots
   pendingScreenshots: [],

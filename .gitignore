@@ -45,6 +45,22 @@ debug.log
 # turbo
 .turbo/
 
+# firebase
+.firebase/
+firebase-debug.log
+firebase-debug.log.*
+firestore-debug.log
+firestore-debug.log.*
+ui-debug.log
+ui-debug.log.*
+pglite-debug.log
+storage-debug.log
+
 # internal docs (don't push)
 /AGENTS.md
 /IMPLEMENTATION_PLAN.md
+
+# service account JSON (never commit credentials)
+*firebase-adminsdk*.json
+serviceAccount.json
+gcp-service-account.json

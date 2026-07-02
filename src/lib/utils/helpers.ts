@@ -1,6 +1,4 @@
-export function classNames(...classes: (string | boolean | undefined | null)[]): string {
-  return classes.filter(Boolean).join(' ');
-}
+import { LANGUAGE_MAP } from './constants';
 
 export function formatRelativeTime(date: Date): string {
   const now = new Date();
@@ -22,35 +20,11 @@ export function formatTokenCount(count: number): string {
   return count.toString();
 }
 
-export function getFileExtension(path: string): string {
+function getFileExtension(path: string): string {
   return path.split('.').pop() || '';
 }
 
 export function getLanguageFromPath(path: string): string {
   const ext = getFileExtension(path);
-  const map: Record<string, string> = {
-    ts: 'typescript',
-    tsx: 'typescript',
-    js: 'javascript',
-    jsx: 'javascript',
-    css: 'css',
-    json: 'json',
-    md: 'markdown',
-    html: 'html',
-  };
-  return map[ext] || 'plaintext';
-}
-
-export function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
-
-export function truncate(str: string, length: number): string {
-  if (str.length <= length) return str;
-  return str.slice(0, length) + '...';
+  return LANGUAGE_MAP[ext] || 'plaintext';
 }

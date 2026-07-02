@@ -19,9 +19,9 @@ export const metadata: Metadata = {
     locale: 'en_US',
     images: [
       {
-        url: `${SITE_URL}/preview.png`,
-        width: 1200,
-        height: 630,
+        url: `${SITE_URL}/ogimage.png`,
+        width: 1024,
+        height: 541,
         alt: 'About Tavryne AI — AI Vibe Coding Platform',
       },
     ],
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     title: 'About Tavryne AI — Browser-Based AI Vibe Coding Platform',
     description:
       'Discover how Tavryne AI is redefining software development with multi-provider AI routing, browser-based IDE, and natural language programming.',
-    images: [`${SITE_URL}/preview.png`],
+    images: [`${SITE_URL}/ogimage.png`],
   },
   keywords: [
     'about Tavryne AI',

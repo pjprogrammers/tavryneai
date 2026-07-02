@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Project } from '@/lib/types/project';
 import { formatRelativeTime, formatTokenCount } from '@/lib/utils/helpers';
@@ -31,7 +32,14 @@ export function ProjectCard({ project }: ProjectCardProps) {
         {/* Thumbnail */}
         <div className="relative w-full h-28 bg-gradient-to-br from-primary/5 via-secondary to-accent/50 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
           {project.thumbnail ? (
-            <img src={project.thumbnail} alt={project.title} className="w-full h-full object-cover" />
+            <Image
+              src={project.thumbnail}
+              alt={project.title}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
+              unoptimized
+            />
           ) : (
             <div className="text-center">
               <svg className="h-8 w-8 text-muted-foreground/30 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">

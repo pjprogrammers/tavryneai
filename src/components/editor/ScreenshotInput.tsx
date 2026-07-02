@@ -45,12 +45,14 @@ export function ScreenshotInput() {
         <div className="flex items-center gap-1">
           {pendingScreenshots.map((s, i) => (
             <div key={i} className="relative group">
+              {/* eslint-disable-next-line @next/next/no-img-element -- data: URL from FileReader cannot be optimized */}
               <img src={s} alt={`Screenshot ${i + 1}`} className="h-7 w-7 object-cover rounded border border-[#313244]" />
               <button
                 onClick={() => removeScreenshot(i)}
+                aria-label={`Remove screenshot ${i + 1}`}
                 className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-3.5 h-3.5 text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100"
               >
-                x
+                ×
               </button>
             </div>
           ))}

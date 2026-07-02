@@ -1,0 +1,263 @@
+- main [ref=e2]:
+  - generic [ref=e5]:
+    - link "Tavryne AI Home" [ref=e6] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e8]: T
+      - generic [ref=e9]: Tavryne AI
+    - navigation "Main navigation" [ref=e10]:
+      - link "Features" [ref=e11] [cursor=pointer]:
+        - /url: "#features"
+      - link "How it Works" [ref=e12] [cursor=pointer]:
+        - /url: "#how-it-works"
+      - link "Pricing" [ref=e13] [cursor=pointer]:
+        - /url: "#pricing"
+      - link "FAQ" [ref=e14] [cursor=pointer]:
+        - /url: "#faq"
+    - generic [ref=e15]:
+      - button "Switch to dark mode" [ref=e16] [cursor=pointer]:
+        - img [ref=e18]
+      - generic [ref=e20]:
+        - link "Sign In" [ref=e21] [cursor=pointer]:
+          - /url: /login
+          - button "Sign In" [ref=e22]
+        - link "Start Building Free" [ref=e23] [cursor=pointer]:
+          - /url: /register
+          - button "Start Building Free" [ref=e24]
+  - region "Hero" [ref=e25]:
+    - generic [ref=e27]:
+      - generic [ref=e29]: Now in Public Beta
+      - heading "Turn any idea into a working app" [level=1] [ref=e31]:
+        - text: Turn any idea
+        - text: into a working app
+      - paragraph [ref=e32]:
+        - text: Just describe what you want to build.
+        - strong [ref=e33]: Tavryne AI
+        - text: generates production-ready code through conversation — powered by NVIDIA NIM, OpenCode Zen, and OpenRouter.
+      - generic [ref=e34]:
+        - link "Start Building Free" [ref=e35] [cursor=pointer]:
+          - /url: /register
+          - button "Start Building Free" [ref=e36]
+        - link "Sign In" [ref=e37] [cursor=pointer]:
+          - /url: /login
+          - button "Sign In" [ref=e38]
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - img [ref=e41]
+          - text: No credit card
+        - generic [ref=e43]:
+          - img [ref=e44]
+          - text: 10,000 tokens free daily
+        - generic [ref=e46]:
+          - img [ref=e47]
+          - text: Multi-provider AI
+  - region "Features" [ref=e49]:
+    - img [ref=e52]
+    - generic [ref=e57]:
+      - generic [ref=e58]:
+        - heading "Everything you need to build with Tavryne AI" [level=2] [ref=e59]
+        - paragraph [ref=e60]: A complete AI vibe coding platform for turning ideas into production applications through natural conversation.
+      - generic [ref=e61]:
+        - article [ref=e64]:
+          - generic [ref=e65]: chat
+          - heading "Natural Language Prompts" [level=3] [ref=e66]
+          - paragraph [ref=e67]: Describe your app in plain English. TavryneAI generates production-ready code.
+        - article [ref=e70]:
+          - generic [ref=e71]: neurology
+          - heading "Multi-Provider AI" [level=3] [ref=e72]
+          - paragraph [ref=e73]: Routes through NVIDIA NIM, OpenCode Zen, and OpenRouter for best results.
+        - article [ref=e76]:
+          - generic [ref=e77]: play_circle
+          - heading "Live Code Preview" [level=3] [ref=e78]
+          - paragraph [ref=e79]: See your app come to life instantly with esbuild-wasm in-browser bundling.
+        - article [ref=e82]:
+          - generic [ref=e83]: code
+          - heading "Monaco Editor" [level=3] [ref=e84]
+          - paragraph [ref=e85]: Full-featured code editor with syntax highlighting, intellisense, and diff views.
+        - article [ref=e88]:
+          - generic [ref=e89]: sync
+          - heading "Iterative Refinement" [level=3] [ref=e90]
+          - paragraph [ref=e91]: Refine your app through conversation. Only changed files are updated.
+        - article [ref=e94]:
+          - generic [ref=e95]: monitoring
+          - heading "Token Usage Tracking" [level=3] [ref=e96]
+          - paragraph [ref=e97]: Real-time token monitoring with daily limits and provider fallback.
+  - region "How it works" [ref=e98]:
+    - img [ref=e101]
+    - generic [ref=e106]:
+      - generic [ref=e107]:
+        - heading "How Tavryne AI works" [level=2] [ref=e108]
+        - paragraph [ref=e109]: From idea to working app in four simple steps using the Tavryne AI vibe coding platform.
+      - generic [ref=e110]:
+        - generic [ref=e111]:
+          - generic [ref=e113]: "01"
+          - heading "Describe Your Idea" [level=3] [ref=e114]
+          - paragraph [ref=e115]: Type what you want to build in natural language. Be as specific or as broad as you like.
+        - generic [ref=e116]:
+          - generic [ref=e118]: "02"
+          - heading "AI Generates Code" [level=3] [ref=e119]
+          - paragraph [ref=e120]: TavryneAI routes your prompt through the best available AI model, streaming results in real-time.
+        - generic [ref=e121]:
+          - generic [ref=e123]: "03"
+          - heading "Preview & Refine" [level=3] [ref=e124]
+          - paragraph [ref=e125]: See your app live in the preview panel. Make changes or iterate with follow-up prompts.
+        - generic [ref=e126]:
+          - generic [ref=e128]: "04"
+          - heading "Deploy & Share" [level=3] [ref=e129]
+          - paragraph [ref=e130]: Export your project or deploy directly to Vercel with one click.
+  - region "Pricing" [ref=e131]:
+    - img [ref=e134]
+    - generic [ref=e142]:
+      - generic [ref=e143]:
+        - heading "Simple, transparent pricing" [level=2] [ref=e144]
+        - paragraph [ref=e145]: Start for free with Tavryne AI. Upgrade when you need more tokens and features.
+      - generic [ref=e146]:
+        - article [ref=e149]:
+          - generic [ref=e150]:
+            - heading "Free" [level=3] [ref=e151]
+            - paragraph [ref=e152]: For individuals exploring vibe coding
+          - generic [ref=e153]: $0/month
+          - list [ref=e154]:
+            - listitem [ref=e155]:
+              - img [ref=e156]
+              - text: 10,000 tokens/day
+            - listitem [ref=e158]:
+              - img [ref=e159]
+              - text: 5 active projects
+            - listitem [ref=e161]:
+              - img [ref=e162]
+              - text: All AI providers
+            - listitem [ref=e164]:
+              - img [ref=e165]
+              - text: Community support
+          - link "Get Started" [ref=e167] [cursor=pointer]:
+            - /url: /register
+            - button "Get Started" [ref=e168]
+        - article [ref=e171]:
+          - generic [ref=e173]: Most Popular
+          - generic [ref=e174]:
+            - heading "Pro" [level=3] [ref=e175]
+            - paragraph [ref=e176]: For professionals building production apps
+          - generic [ref=e177]: $20/month
+          - list [ref=e178]:
+            - listitem [ref=e179]:
+              - img [ref=e180]
+              - text: 100,000 tokens/day
+            - listitem [ref=e182]:
+              - img [ref=e183]
+              - text: Unlimited projects
+            - listitem [ref=e185]:
+              - img [ref=e186]
+              - text: Priority AI routing
+            - listitem [ref=e188]:
+              - img [ref=e189]
+              - text: Email support
+            - listitem [ref=e191]:
+              - img [ref=e192]
+              - text: GitHub export
+            - listitem [ref=e194]:
+              - img [ref=e195]
+              - text: Deploy to Vercel
+          - link "Coming Soon" [ref=e197] [cursor=pointer]:
+            - /url: "#"
+            - button "Coming Soon" [disabled]
+        - article [ref=e200]:
+          - generic [ref=e201]:
+            - heading "Team" [level=3] [ref=e202]
+            - paragraph [ref=e203]: For teams collaborating on projects
+          - generic [ref=e204]: $50/month
+          - list [ref=e205]:
+            - listitem [ref=e206]:
+              - img [ref=e207]
+              - text: 500,000 tokens/day
+            - listitem [ref=e209]:
+              - img [ref=e210]
+              - text: Unlimited projects
+            - listitem [ref=e212]:
+              - img [ref=e213]
+              - text: Team workspaces
+            - listitem [ref=e215]:
+              - img [ref=e216]
+              - text: Collaborator roles
+            - listitem [ref=e218]:
+              - img [ref=e219]
+              - text: Priority support
+            - listitem [ref=e221]:
+              - img [ref=e222]
+              - text: Custom integrations
+          - link "Coming Soon" [ref=e224] [cursor=pointer]:
+            - /url: "#"
+            - button "Coming Soon" [disabled]
+  - region "Frequently Asked Questions" [ref=e225]:
+    - generic [ref=e226]:
+      - generic [ref=e227]:
+        - heading "Frequently asked questions about Tavryne AI" [level=2] [ref=e228]
+        - paragraph [ref=e229]: Everything you need to know about the Tavryne AI vibe coding platform.
+      - generic [ref=e230]:
+        - group [ref=e231] [cursor=pointer]:
+          - generic "What is Tavryne AI?" [ref=e232]:
+            - generic [ref=e233]: What is Tavryne AI?
+            - img [ref=e234]
+        - group [ref=e236] [cursor=pointer]:
+          - generic "Is Tavryne AI free to use?" [ref=e237]:
+            - generic [ref=e238]: Is Tavryne AI free to use?
+            - img [ref=e239]
+        - group [ref=e241] [cursor=pointer]:
+          - generic "What AI models does Tavryne AI use?" [ref=e242]:
+            - generic [ref=e243]: What AI models does Tavryne AI use?
+            - img [ref=e244]
+        - group [ref=e246] [cursor=pointer]:
+          - generic "Can I deploy apps built with Tavryne AI?" [ref=e247]:
+            - generic [ref=e248]: Can I deploy apps built with Tavryne AI?
+            - img [ref=e249]
+        - group [ref=e251] [cursor=pointer]:
+          - generic "What kind of apps can I build with Tavryne AI?" [ref=e252]:
+            - generic [ref=e253]: What kind of apps can I build with Tavryne AI?
+            - img [ref=e254]
+  - region "Call to action" [ref=e256]:
+    - generic [ref=e258]:
+      - heading "Ready to build something amazing with Tavryne AI?" [level=2] [ref=e259]
+      - paragraph [ref=e260]:
+        - text: Join thousands of developers using
+        - strong [ref=e261]: Tavryne AI
+        - text: to turn their ideas into working apps. No setup, no configuration. Just describe what you want and let AI build it.
+      - link "Start Building Free with Tavryne AI" [ref=e262] [cursor=pointer]:
+        - /url: /register
+        - button "Start Building Free with Tavryne AI" [ref=e263]
+  - generic "Site footer" [ref=e264]:
+    - generic [ref=e265]:
+      - generic [ref=e266]:
+        - generic [ref=e267]:
+          - generic [ref=e268]:
+            - generic [ref=e270]: T
+            - generic [ref=e271]: Tavryne AI
+          - paragraph [ref=e272]: Tavryne AI is the browser-based AI vibe coding platform that turns ideas into production-ready apps through natural conversation. Powered by NVIDIA NIM, OpenCode Zen, and OpenRouter.
+        - generic [ref=e273]:
+          - heading "Product" [level=3] [ref=e274]
+          - list [ref=e275]:
+            - listitem [ref=e276]:
+              - link "Features" [ref=e277] [cursor=pointer]:
+                - /url: "#features"
+            - listitem [ref=e278]:
+              - link "How it Works" [ref=e279] [cursor=pointer]:
+                - /url: "#how-it-works"
+            - listitem [ref=e280]:
+              - link "Pricing" [ref=e281] [cursor=pointer]:
+                - /url: "#pricing"
+            - listitem [ref=e282]:
+              - link "FAQ" [ref=e283] [cursor=pointer]:
+                - /url: "#faq"
+        - generic [ref=e284]:
+          - heading "Legal" [level=3] [ref=e285]
+          - list [ref=e286]:
+            - listitem [ref=e287]:
+              - link "Privacy Policy" [ref=e288] [cursor=pointer]:
+                - /url: /privacy
+            - listitem [ref=e289]:
+              - link "Terms of Service" [ref=e290] [cursor=pointer]:
+                - /url: /terms
+            - listitem [ref=e291]:
+              - link "Blog" [ref=e292] [cursor=pointer]:
+                - /url: /blog
+      - generic [ref=e293]:
+        - paragraph [ref=e294]: Powered by NVIDIA NIM · OpenCode Zen · OpenRouter
+        - paragraph [ref=e295]: © 2026 Tavryne AI. All rights reserved.

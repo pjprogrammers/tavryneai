@@ -1,23 +1,17 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuthStore } from '@/lib/store/useAuthStore';
+import { formatRelativeTime } from '@/lib/utils/helpers';
 
 interface Notification {
   id: string;
   title: string;
   message: string;
-  time: string;
   read: boolean;
   type: 'info' | 'success' | 'warning' | 'error';
+  createdAt: string;
 }
-
-const sampleNotifications: Notification[] = [
-  { id: '1', title: 'Generation Complete', message: 'Your project "TaskFlow" has been fully generated.', time: '2m ago', read: false, type: 'success' },
-  { id: '2', title: 'Provider Fallback', message: 'Switched from NVIDIA NIM to OpenRouter due to rate limit.', time: '15m ago', read: false, type: 'warning' },
-  { id: '3', title: 'Token Warning', message: 'You\'ve used 85% of your daily token limit.', time: '1h ago', read: false, type: 'warning' },
-  { id: '4', title: 'Preview Error', message: 'Build failed: Missing import in App.tsx', time: '2h ago', read: true, type: 'error' },
-  { id: '5', title: 'Project Archived', message: '"Old Blog" has been archived successfully.', time: '1d ago', read: true, type: 'info' },
-];
 
 const typeIcons: Record<string, React.ReactNode> = {
   success: (
@@ -56,11 +50,45 @@ interface NotificationCenterProps {
 }
 
 export function NotificationCenter({ open, onOpenChange }: NotificationCenterProps) {
-  const [notifications, setNotifications] = useState(sampleNotifications);
+  const idToken = useAuthStore((s) => s.idToken);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!idToken) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/user/notifications?limit=20', {
+        headers: { Authorization: `Bearer ${idToken}` },
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.items || []);
+      }
+    } catch {} finally {
+      setLoading(false);
+    }
+  }, [idToken]);
+
+  useEffect(() => {
+    if (open) load();
+  }, [open, load]);
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  const markAllRead = async () => {
+    if (!idToken) return;
+    try {
+      const res = await fetch('/api/user/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({}),
+      });
+      if (res.ok) {
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      }
+    } catch {}
   };
 
   return (
@@ -93,7 +121,11 @@ export function NotificationCenter({ open, onOpenChange }: NotificationCenterPro
                 )}
               </div>
               <div className="max-h-80 overflow-y-auto">
-                {notifications.length === 0 ? (
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                  </div>
+                ) : notifications.length === 0 ? (
                   <div className="p-8 text-center text-sm text-muted-foreground">
                     No notifications yet
                   </div>
@@ -105,13 +137,15 @@ export function NotificationCenter({ open, onOpenChange }: NotificationCenterPro
                         !notification.read ? 'bg-primary/[0.02]' : ''
                       }`}
                     >
-                      {typeIcons[notification.type]}
+                      {typeIcons[notification.type] || typeIcons.info}
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm ${notification.read ? 'text-foreground' : 'text-foreground font-medium'}`}>
                           {notification.title}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5 truncate">{notification.message}</p>
-                        <p className="text-[10px] text-muted-foreground/60 mt-1">{notification.time}</p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-1">
+                          {formatRelativeTime(new Date(notification.createdAt))}
+                        </p>
                       </div>
                       {!notification.read && (
                         <span className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />

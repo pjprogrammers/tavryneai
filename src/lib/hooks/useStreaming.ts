@@ -8,7 +8,7 @@ import { MODEL_TIMEOUT_MS, FALLBACK_NOTIFICATION_SECONDS, FALLBACK_TIMEOUT_MS } 
 import { getSystemPrompt, getJsonRepairPrompt } from '@/lib/ai/prompts';
 import { stripThinking } from '@/lib/ai/thinking';
 import { classifyFailure, getFailureMessage } from '@/lib/ai/errors';
-import { getNextFallbackModel, getFallbackModelChain } from '@/lib/ai/fallback-chain';
+import { getFallbackModelChain } from '@/lib/ai/fallback-chain';
 import { modelHealth } from '@/lib/ai/model-health';
 
 interface Message {
@@ -24,6 +24,100 @@ export interface FileChangeSummary {
   deleted: string[];
   summary?: string;
   descriptions?: Record<string, string>;
+}
+
+// Pure helpers — defined outside the hook so they have a stable reference
+// and can safely be included in useCallback dependency arrays.
+
+function extractJson(text: string): string {
+  const cleaned = stripThinking(text);
+  const jsonBlock = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (jsonBlock) return jsonBlock[1].trim();
+  const braceMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (braceMatch) return braceMatch[0];
+  return cleaned.trim();
+}
+
+function tryParseJson(text: string): unknown {
+  const extracted = extractJson(text);
+  try {
+    return JSON.parse(extracted);
+  } catch {
+    // Try common repairs
+    const repaired = extracted
+      .replace(/,\s*([}\]])/g, '$1')                 // trailing commas
+      .replace(/'/g, '"')                              // single quotes to double
+      .replace(/(\w+):/g, '"$1":')                     // unquoted keys
+      .replace(/\/\/.*$/gm, '')                        // single-line comments
+      .replace(/\/\*[\s\S]*?\*\//g, '');               // multi-line comments
+    try {
+      return JSON.parse(repaired);
+    } catch {
+      // Try prepending { if missing
+      if (!repaired.trim().startsWith('{')) {
+        try {
+          return JSON.parse('{' + repaired.trim() + '}');
+        } catch {}
+      }
+      return null;
+    }
+  }
+}
+
+function buildAgentEvents(
+  parsed: any,
+  diffs: FileDiff[],
+  summary: string,
+  changeSummary: FileChangeSummary
+): AgentEventPayload[] {
+  const events: AgentEventPayload[] = [
+    {
+      type: 'thinking',
+      data: {
+        steps: [
+          { status: 'completed', title: 'Analyzing prompt' },
+          { status: 'completed', title: 'Generating files' },
+        ],
+      },
+    },
+  ];
+
+  const actionByFile = new Map<string, 'create' | 'modify' | 'delete'>();
+  changeSummary.created.forEach((p) => actionByFile.set(p, 'create'));
+  changeSummary.modified.forEach((p) => actionByFile.set(p, 'modify'));
+  changeSummary.deleted.forEach((p) => actionByFile.set(p, 'delete'));
+
+  for (const diff of diffs) {
+    const action = actionByFile.get(diff.filename) ?? 'modify';
+    events.push({
+      type: 'diff',
+      data: {
+        file: diff.filename,
+        oldContent: diff.oldContent,
+        newContent: diff.newContent,
+        action,
+      },
+    });
+  }
+
+  events.push({
+    type: 'summary',
+    data: {
+      message: summary || 'Files generated successfully',
+      filesModified: [
+        ...changeSummary.created.map((p) => ({ path: p, action: 'create' })),
+        ...changeSummary.modified.map((p) => ({ path: p, action: 'modify' })),
+      ],
+      changes: [
+        ...changeSummary.created.map((p) => `Created ${p}`),
+        ...changeSummary.modified.map((p) => `Modified ${p}`),
+        ...changeSummary.deleted.map((p) => `Deleted ${p}`),
+      ],
+      verification: [],
+    },
+  });
+
+  return events;
 }
 
 export function useStreaming() {
@@ -77,147 +171,63 @@ export function useStreaming() {
     }
   }, [storeMessages, messages.length]);
 
-  // Helper: extract JSON from AI output (handles markdown code fences)
-  const extractJson = (text: string): string => {
-    // Strip thinking/reasoning blocks before extracting JSON
-    const cleaned = stripThinking(text);
-    // Try to extract from markdown code block first
-    const jsonBlock = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (jsonBlock) return jsonBlock[1].trim();
+  // Defined early so `sendMessage` can reference it directly (avoids the
+  // forward-reference ref pattern in the most performance-critical path).
+  const clearTimeoutTimer = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
 
-    // Try to find a JSON object directly
-    const braceMatch = cleaned.match(/\{[\s\S]*\}/);
-    if (braceMatch) return braceMatch[0];
+  // Memoized so dependent callbacks (cancelStream, revertFallback) have a
+  // stable reference and can include it in their dependency arrays without
+  // causing infinite re-renders.
+  const revertToPreAi = useCallback(() => {
+    if (preAiFilesRef.current) {
+      setFiles(preAiFilesRef.current);
+      useEditorStore.getState().setPendingDiffs([]);
+      useEditorStore.getState().setShowDiffPanel(false);
+    }
+  }, [setFiles]);
 
-    return cleaned.trim();
-  };
+  // ---- Forward-reference refs ----
+  // The fallback chain callbacks (resetTimeoutTimer → startFallbackCountdown
+  // → executeFallback → sendMessage) form a forward-reference cycle: each
+  // callback's body calls one defined later in the file. We expose them to
+  // `sendMessage` through refs that are kept in sync by useEffect after all
+  // callbacks are defined. This breaks the cycle without relying on the
+  // unstable references that the eslint exhaustive-deps rule would otherwise
+  // require in the deps array.
+  const commitAssistantContentRef = useRef<((content: string) => void) | null>(null);
+  const resetTimeoutTimerRef = useRef<(() => void) | null>(null);
+  const startFallbackCountdownRef = useRef<(() => void) | null>(null);
+  const executeFallbackRef = useRef<(() => void) | null>(null);
+  const getFallbackModelLabelsRef = useRef<(() => { fromModel: string; toModel: string }) | null>(null);
+  const sendMessageRef = useRef<((content: string, action?: 'improve' | 'refactor' | 'fix') => Promise<void>) | null>(null);
 
-  // Helper: safely parse JSON with common repairs
-  const tryParseJson = (text: string): any => {
-    const extracted = extractJson(text);
-    try {
-      return JSON.parse(extracted);
-    } catch {
-      // Try common repairs
-      let repaired = extracted
-        .replace(/,\s*([}\]])/g, '$1')                 // trailing commas
-        .replace(/'/g, '"')                              // single quotes to double
-        .replace(/(\w+):/g, '"$1":')                     // unquoted keys
-        .replace(/\/\/.*$/gm, '')                        // single-line comments
-        .replace(/\/\*[\s\S]*?\*\//g, '');               // multi-line comments
-      try {
-        return JSON.parse(repaired);
-      } catch {
-        // Try prepending { if missing
-        if (!repaired.trim().startsWith('{')) {
-          try {
-            return JSON.parse('{' + repaired.trim() + '}');
-          } catch {}
+  // rAF-throttled assistant-content commit. Without this, every SSE token
+  // triggers a full state rebuild of the messages array and re-renders every
+  // chat bubble + file list. Throttling keeps the UI smooth on long generations.
+  const pendingContentRef = useRef<string | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const commitAssistantContent = useCallback((content: string) => {
+    pendingContentRef.current = content;
+    if (rafRef.current !== null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      const next = pendingContentRef.current;
+      if (next === null) return;
+      pendingContentRef.current = null;
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.role === 'assistant') {
+          return [...prev.slice(0, -1), { role: 'assistant', content: next }];
         }
-        return null;
-      }
-    }
-  };
-
-  const buildAgentEvents = (
-    parsed: any,
-    diffs: FileDiff[],
-    summary: string,
-    changes: FileChangeSummary
-  ): AgentEventPayload[] => {
-    const events: AgentEventPayload[] = [];
-
-    // 1. Thinking phase
-    const steps = [
-      { status: 'completed' as const, title: 'Analyze request' },
-    ];
-
-    if (changes.created.length > 0 || changes.modified.length > 0 || changes.deleted.length > 0) {
-      steps.push({ status: 'completed' as const, title: 'Determine file changes' });
-    }
-    steps.push({ status: 'completed' as const, title: 'Generate code' });
-
-    events.push({ type: 'thinking', data: { steps } });
-
-    // 2. Tool calls + diffs
-    if (changes.created.length > 0) {
-      for (const path of changes.created) {
-        events.push({
-          type: 'tool',
-          data: { tool: 'create_file', file: path, description: changes.descriptions?.[path] },
-        });
-      }
-    }
-    if (changes.modified.length > 0) {
-      for (const path of changes.modified) {
-        const diff = diffs.find((d) => d.filename === path);
-        events.push({
-          type: 'tool',
-          data: { tool: 'edit_file', file: path, description: changes.descriptions?.[path] },
-        });
-        if (diff) {
-          events.push({
-            type: 'diff',
-            data: {
-              file: path,
-              oldContent: diff.oldContent,
-              newContent: diff.newContent,
-              action: 'modify',
-            },
-          });
-        }
-      }
-    }
-    if (changes.created.length > 0) {
-      for (const path of changes.created) {
-        const diff = diffs.find((d) => d.filename === path);
-        if (diff) {
-          events.push({
-            type: 'diff',
-            data: {
-              file: path,
-              oldContent: diff.oldContent,
-              newContent: diff.newContent,
-              action: 'create',
-            },
-          });
-        }
-      }
-    }
-    if (changes.deleted.length > 0) {
-      for (const path of changes.deleted) {
-        events.push({
-          type: 'diff',
-          data: { file: path, oldContent: '', newContent: '', action: 'delete' },
-        });
-      }
-    }
-
-    // 3. Summary
-    const allFiles = [
-      ...changes.created.map((p) => ({ path: p, action: 'create' as const })),
-      ...changes.modified.map((p) => ({ path: p, action: 'modify' as const })),
-      ...changes.deleted.map((p) => ({ path: p, action: 'delete' as const })),
-    ];
-
-    events.push({
-      type: 'summary',
-      data: {
-        message: summary || `Modified ${allFiles.length} file(s)`,
-        filesModified: allFiles,
-        changes: [
-          ...changes.created.map((p) => `Created ${p}`),
-          ...changes.modified.map((p) => `Modified ${p}`),
-          ...changes.deleted.map((p) => `Deleted ${p}`),
-        ],
-        verification: [
-          { name: 'File changes applied', passed: true },
-        ],
-      },
+        return [...prev, { role: 'assistant', content: next }];
+      });
     });
-
-    return events;
-  };
+  }, []);
 
   const sendMessage = useCallback(
     async (content: string, action?: 'improve' | 'refactor' | 'fix') => {
@@ -278,8 +288,12 @@ export function useStreaming() {
         partialOutputRef.current = '';
       }
 
-      // Build system prompt override with custom instructions + project memory
-      const buildSystemPrompt = () => {
+      // Build system prompt override with custom instructions + project memory.
+      // Captured ONCE so the initial request and the JSON-repair retry use the
+      // exact same prompt; otherwise the retry would race with state changes to
+      // customInstructions / projectMemory / messages and could double-apply
+      // screenshots or drop context.
+      const systemPromptOverride = (() => {
         let prompt = '';
         if (customInstructions) {
           prompt += `## Custom Instructions\n${customInstructions}\n\n`;
@@ -288,9 +302,9 @@ export function useStreaming() {
           prompt += `## Project Memory\n${projectMemory}\n\n`;
         }
         return prompt || undefined;
-      };
+      })();
 
-      const doFetch = async (overrideMessages?: Message[], overrideSystemPrompt?: string) => {
+      const doFetch = async (overrideMessages?: Message[]) => {
         const msgs = overrideMessages || [...messages, userMsg];
         const body: Record<string, any> = {
           projectId: currentProject.id,
@@ -299,8 +313,7 @@ export function useStreaming() {
           provider,
           framework: currentProject.framework,
         };
-        const promptOverride = overrideSystemPrompt || buildSystemPrompt();
-        if (promptOverride) body.systemPrompt = promptOverride;
+        if (systemPromptOverride) body.systemPrompt = systemPromptOverride;
 
         const response = await fetch('/api/generate', {
           method: 'POST',
@@ -330,7 +343,7 @@ export function useStreaming() {
         receivedAnyTokenRef.current = false;
 
         // Start timeout timer
-        resetTimeoutTimer();
+        resetTimeoutTimerRef.current?.();
 
         while (true) {
           const { done, value } = await reader.read();
@@ -353,13 +366,7 @@ export function useStreaming() {
             if (event.token) {
               receivedAnyTokenRef.current = true;
               assistantContent += event.token;
-              setMessages((prev) => {
-                const last = prev[prev.length - 1];
-                if (last?.role === 'assistant') {
-                  return [...prev.slice(0, -1), { role: 'assistant', content: assistantContent }];
-                }
-                return [...prev, { role: 'assistant', content: assistantContent }];
-              });
+                  commitAssistantContentRef.current?.(assistantContent);
             }
 
             if (event.status) {
@@ -406,6 +413,11 @@ export function useStreaming() {
 
         if (streamError) throw new Error(streamError);
 
+        // Mark this model as healthy now that the stream completed cleanly.
+        // We do NOT mark it in `finally` — that would overwrite the failure
+        // recorded in the catch path for retries and AbortErrors.
+        modelHealth.recordSuccess(currentProject.selectedModel);
+
         // Try to parse JSON from the AI output
         let parsed: any = null;
         try {
@@ -445,13 +457,7 @@ export function useStreaming() {
                 const event: StreamEvent = JSON.parse(raw);
                 if (event.token) {
                   assistantContent += event.token;
-                  setMessages((prev) => {
-                    const last = prev[prev.length - 1];
-                    if (last?.role === 'assistant') {
-                      return [...prev.slice(0, -1), { role: 'assistant', content: assistantContent }];
-                    }
-                    return [...prev, { role: 'assistant', content: assistantContent }];
-                  });
+              commitAssistantContentRef.current?.(assistantContent);
                 }
                 if (event.status) {
                   setProgressStatus(event.status);
@@ -586,7 +592,7 @@ export function useStreaming() {
           partialOutputRef.current = assistantContent;
         }
         // On error, revert to pre-AI state
-        store.revertToPreAi();
+        revertToPreAi();
         setMessages((prev) => [
           ...prev,
           { role: 'assistant', content: `Error: ${err.message}` },
@@ -594,8 +600,11 @@ export function useStreaming() {
       } finally {
         if (fallbackTimer) clearTimeout(fallbackTimer);
         clearTimeoutTimer();
+        if (rafRef.current !== null) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
         setProgressPhase((p) => p === 'error' ? 'error' : 'complete');
-        modelHealth.recordSuccess(currentProject.selectedModel);
         partialOutputRef.current = '';
         pendingRequestRef.current = null;
         useEditorStore.getState().setStreaming(false);
@@ -603,15 +612,8 @@ export function useStreaming() {
         preAiFilesRef.current = null;
       }
     },
-    [idToken, currentProject, messages, files, addMessage, setFiles]
+    [idToken, currentProject, messages, files, addMessage, setFiles, revertToPreAi, clearTimeoutTimer]
   );
-
-  const clearTimeoutTimer = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  }, []);
 
   const cancelStream = useCallback(() => {
     abortRef.current?.abort();
@@ -627,30 +629,34 @@ export function useStreaming() {
     setPartialOutputCount(0);
     setAgentEvents([]);
     partialOutputRef.current = '';
-    store.revertToPreAi();
+    revertToPreAi();
     setMessages(preAiMessagesRef.current);
-  }, [clearTimeoutTimer]);
+  }, [clearTimeoutTimer, revertToPreAi]);
 
   const resetTimeoutTimer = useCallback(() => {
     clearTimeoutTimer();
     timeoutRef.current = setTimeout(() => {
       if (abortRef.current) {
-        abortRef.current.abort();
+        abortRef.current?.abort();
         modelHealth.recordFailure(currentProject?.selectedModel || 'unknown');
         const modelLabel = currentProject?.selectedModel || 'Current model';
         setFallbackReason(`${modelLabel} is taking too long.`);
-        startFallbackCountdown();
+        startFallbackCountdownRef.current?.();
       }
     }, MODEL_TIMEOUT_MS);
+    // startFallbackCountdown is defined later; stable (deps only on refs).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentProject?.selectedModel]);
 
   const startFallbackCountdown = useCallback(() => {
     setFallbackCountdownActive(true);
     setFallbackCountdown(FALLBACK_NOTIFICATION_SECONDS);
 
-    const { fromModel, toModel } = getFallbackModelLabels();
-    if (fromModel) setFallbackFromModel(fromModel);
-    if (toModel) setFallbackToModel(toModel);
+    const labels = getFallbackModelLabelsRef.current?.();
+    if (labels) {
+      if (labels.fromModel) setFallbackFromModel(labels.fromModel);
+      if (labels.toModel) setFallbackToModel(labels.toModel);
+    }
 
     let remaining = FALLBACK_NOTIFICATION_SECONDS;
     countdownRef.current = setInterval(() => {
@@ -660,7 +666,7 @@ export function useStreaming() {
         clearInterval(countdownRef.current!);
         countdownRef.current = null;
         setFallbackCountdownActive(false);
-        executeFallback();
+        executeFallbackRef.current?.();
       }
     }, 1000);
   }, []);
@@ -679,7 +685,7 @@ export function useStreaming() {
       countdownRef.current = null;
     }
     setFallbackCountdownActive(false);
-    executeFallback();
+    executeFallbackRef.current?.();
   }, []);
 
   const executeFallback = useCallback(() => {
@@ -715,7 +721,10 @@ export function useStreaming() {
 
     setFallbackInfo({ from: chain[nextIdx - 1]?.displayName || 'unknown', to: chain[nextIdx].displayName });
 
-    sendMessage(pending.content, pending.action);
+    sendMessageRef.current?.(pending.content, pending.action);
+    // sendMessage and clearTimeoutTimer are accessed via refs to break
+    // the forward-reference cycle (sendMessage → resetTimeoutTimer → … → sendMessage).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const clearGeneration = useCallback(() => {
@@ -753,18 +762,18 @@ export function useStreaming() {
     setFallbackCountdown(0);
     setPartialOutputCount(0);
     partialOutputRef.current = '';
-    store.revertToPreAi();
-  }, [clearTimeoutTimer]);
+    revertToPreAi();
+  }, [clearTimeoutTimer, revertToPreAi]);
 
-  const store = {
-    revertToPreAi: () => {
-      if (preAiFilesRef.current) {
-        setFiles(preAiFilesRef.current);
-        useEditorStore.getState().setPendingDiffs([]);
-        useEditorStore.getState().setShowDiffPanel(false);
-      }
-    },
-  };
+  // ---- Sync forward-reference refs after all callbacks are defined ----
+  useEffect(() => {
+    commitAssistantContentRef.current = commitAssistantContent;
+    resetTimeoutTimerRef.current = resetTimeoutTimer;
+    startFallbackCountdownRef.current = startFallbackCountdown;
+    executeFallbackRef.current = executeFallback;
+    getFallbackModelLabelsRef.current = getFallbackModelLabels;
+    sendMessageRef.current = sendMessage;
+  });
 
   const isStreaming = useEditorStore((s) => s.isStreaming);
 

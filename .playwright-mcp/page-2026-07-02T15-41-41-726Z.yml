@@ -1,0 +1,66 @@
+- generic [ref=f3e2]:
+  - complementary "Primary" [ref=f3e3]:
+    - link "Tavryne AI home" [ref=f3e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f3e7]: T
+      - generic [ref=f3e8]: TavryneAI
+    - navigation "Main" [ref=f3e9]:
+      - link "Home" [ref=f3e10] [cursor=pointer]:
+        - /url: /
+        - img [ref=f3e12]
+        - text: Home
+      - link "Dashboard" [ref=f3e14] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=f3e16]
+        - text: Dashboard
+      - link "Analytics" [ref=f3e18] [cursor=pointer]:
+        - /url: /analytics
+        - img [ref=f3e20]
+        - text: Analytics
+      - link "Settings" [ref=f3e22] [cursor=pointer]:
+        - /url: /settings
+        - img [ref=f3e24]
+        - text: Settings
+    - link "Open settings for user" [ref=f3e28] [cursor=pointer]:
+      - /url: /settings
+      - generic [ref=f3e30]: "?"
+      - generic [ref=f3e31]:
+        - paragraph [ref=f3e32]: User
+        - paragraph
+  - main [ref=f3e33]:
+    - generic [ref=f3e35]:
+      - generic [ref=f3e36]:
+        - generic [ref=f3e37]:
+          - heading "Welcome back" [level=1] [ref=f3e38]
+          - paragraph [ref=f3e39]: Continue where you left off or start something new.
+        - generic [ref=f3e40]:
+          - generic [ref=f3e43]:
+            - generic [ref=f3e44]: 0 / 10,000 tokens
+            - generic [ref=f3e45]: 0%
+          - button "Search ⌘K" [ref=f3e47] [cursor=pointer]:
+            - img [ref=f3e48]
+            - generic [ref=f3e50]: Search
+            - generic [ref=f3e51]: ⌘K
+          - button "Open notifications" [ref=f3e53] [cursor=pointer]:
+            - img [ref=f3e54]
+          - button "Switch to dark mode" [ref=f3e56] [cursor=pointer]:
+            - img [ref=f3e58]
+          - button "Sign Out" [ref=f3e60] [cursor=pointer]
+      - generic [ref=f3e61]:
+        - button "New Project" [ref=f3e62] [cursor=pointer]:
+          - img [ref=f3e63]
+          - text: New Project
+        - generic [ref=f3e65]:
+          - img
+          - textbox "Search by name, description or framework..." [ref=f3e66]
+      - generic [ref=f3e67]:
+        - img [ref=f3e69]
+        - heading "No projects yet" [level=3] [ref=f3e71]
+        - paragraph [ref=f3e72]: Start by describing your app idea in natural language. TavryneAI will generate production-ready code for you.
+        - generic [ref=f3e73]:
+          - paragraph [ref=f3e74]: "Try these prompts:"
+          - list [ref=f3e75]:
+            - listitem [ref=f3e76]: “Build a landing page for a SaaS product called TaskFlow”
+            - listitem [ref=f3e77]: “Create a todo app with dark mode and local storage”
+            - listitem [ref=f3e78]: “Build a personal portfolio with a blog section”
+        - button "Create your first project" [ref=f3e79] [cursor=pointer]

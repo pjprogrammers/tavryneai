@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminFirestore } from '@/lib/firebase/admin';
-import { verifyAuth, isErrorResponse, requireEmailVerified } from '@/lib/firebase/auth';
+import { adminFirestore } from '@/lib/firebase/admin';
+import { isErrorResponse, requireEmailVerified, requireAdmin } from '@/lib/firebase/auth';
 import { checkRateLimit } from '@/lib/server-rate-limit';
-import { isAdminEmail } from '@/lib/admin';
 import { DAILY_TOKEN_LIMIT } from '@/lib/utils/constants';
 
 function relativeTime(ts: Date): string {
@@ -25,7 +24,7 @@ function truncate(str: string, max = 80): string {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await verifyAuth(req);
+  const auth = await requireAdmin(req);
   if (isErrorResponse(auth)) return auth;
   const emailGuard = requireEmailVerified(auth);
   if (emailGuard) return emailGuard;
@@ -37,13 +36,6 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const userRecord = await adminAuth.getUser(auth.uid);
-    const isAdmin = userRecord.customClaims?.admin === true || isAdminEmail(auth.email);
-
-    if (!isAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const now = new Date();
 
     const allUsersSnap = await adminFirestore.collection('users').get();
@@ -105,6 +97,12 @@ export async function GET(req: NextRequest) {
     const todayKey = now.toISOString().split('T')[0];
     const weekAgo = new Date(now.getTime() - 6 * 86400000);
 
+    const projectUserMap = new Map<string, string>();
+    for (const doc of allProjectsSnap.docs) {
+      const d = doc.data();
+      if (d.userId) projectUserMap.set(doc.id, d.userId);
+    }
+
     const activityPromises = allProjectsSnap.docs.slice(0, 50).map(async (doc: any) => {
       const pid = doc.id;
       const snap = await adminFirestore
@@ -114,31 +112,34 @@ export async function GET(req: NextRequest) {
         .orderBy('timestamp', 'desc')
         .limit(5)
         .get();
-      return snap.docs.map((d: any) => ({ pid, ...d.data(), id: d.id }));
+      return snap.docs.map((d: FirebaseFirestore.QueryDocumentSnapshot) => ({ pid, ...d.data(), id: d.id }));
     });
 
     const activityResults = await Promise.all(activityPromises);
     const allActivity: any[] = [];
     const dailyTokens = new Map<string, number>();
+    const userByUid = new Map(users.map((u) => [u.uid, u]));
 
     for (const msgs of activityResults) {
       for (const msg of msgs) {
         const ts = msg.timestamp?.toDate?.();
-        if (ts) {
-          const dayKey = ts.toISOString().split('T')[0];
-          dailyTokens.set(dayKey, (dailyTokens.get(dayKey) || 0) + (msg.tokensUsed || 0));
+        if (!ts) continue;
+        const dayKey = ts.toISOString().split('T')[0];
+        dailyTokens.set(dayKey, (dailyTokens.get(dayKey) || 0) + (msg.tokensUsed || 0));
 
-          if (allActivity.length < 50) {
-            const user = users.find((u) => false);
-            allActivity.push({
-              projectId: msg.pid,
-              content: truncate(msg.content || ''),
-              tokensUsed: msg.tokensUsed || 0,
-              timestamp: ts.toISOString(),
-              relativeTime: relativeTime(ts),
-            });
-          }
-        }
+        if (allActivity.length >= 50) continue;
+        const ownerUid = projectUserMap.get(msg.pid);
+        const owner = ownerUid ? userByUid.get(ownerUid) : undefined;
+        allActivity.push({
+          projectId: msg.pid,
+          userId: ownerUid || null,
+          userEmail: owner?.email || null,
+          userDisplayName: owner?.displayName || null,
+          content: truncate(msg.content || ''),
+          tokensUsed: msg.tokensUsed || 0,
+          timestamp: ts.toISOString(),
+          relativeTime: relativeTime(ts),
+        });
       }
     }
 

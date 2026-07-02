@@ -97,9 +97,7 @@ export default function VerifyEmailPage() {
       <div className="w-full max-w-md animate-slide-up-lg">
         <div className="bg-card border border-border rounded-2xl p-8 shadow-xl text-center">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center">
-              <span className="text-white text-xs font-bold">T</span>
-            </div>
+            <img src="/icon-32x32.png" alt="" className="h-8 w-8 rounded-lg" />
             <span className="text-lg font-semibold text-foreground">TavryneAI</span>
           </Link>
 

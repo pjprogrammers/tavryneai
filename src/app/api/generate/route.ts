@@ -54,6 +54,27 @@ export async function POST(req: NextRequest) {
 
   const { messages, model, provider, projectId, framework, systemPrompt: customPrompt } = body;
 
+  // SECURITY: Verify the caller owns this project BEFORE reading snapshots,
+  // reserving tokens, or streaming any AI output. This closes the IDOR that
+  // would otherwise let any authenticated user read/write another user's
+  // project and consume their token quota.
+  let projectIsOwner = false;
+  try {
+    const projectRef = adminFirestore.collection('projects').doc(projectId);
+    const projectSnap = await projectRef.get();
+    if (projectSnap.exists && projectSnap.data()?.userId === uid) {
+      projectIsOwner = true;
+    }
+  } catch {
+    projectIsOwner = false;
+  }
+  if (!projectIsOwner) {
+    return new Response(JSON.stringify({ error: 'Project not found' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   // Load current project files for context
   let projectSnapshot = '';
   try {
@@ -152,6 +173,7 @@ export async function POST(req: NextRequest) {
     : AVAILABLE_MODELS;
 
   const encoder = new TextEncoder();
+  let tokensFinalized = false;
   const stream = new ReadableStream({
     async start(controller) {
       let fullResponse = '';
@@ -251,6 +273,7 @@ export async function POST(req: NextRequest) {
               [dailyUsageKey]: FieldValue.increment(finalTokens),
             });
           }
+          tokensFinalized = true;
 
           const projectRef = adminFirestore.collection('projects').doc(projectId);
           await projectRef.update({
@@ -423,12 +446,39 @@ export async function POST(req: NextRequest) {
           timestamp: new Date(),
         }).catch(() => {});
 
+      // Refund reserved tokens — no model produced output to charge against.
+      if (!tokensFinalized && reservedTokens > 0) {
+        try {
+          await userRef.update({
+            tokensUsedToday: FieldValue.increment(-reservedTokens),
+          });
+          tokensFinalized = true;
+        } catch (err) {
+          console.error('[generate] Failed to refund reserved tokens after exhaustion:', err);
+        }
+      }
+
       controller.enqueue(
         encoder.encode(
           `data: ${JSON.stringify({ error: `All models exhausted. Last attempt via ${usedProvider} failed.`, providerError: usedProvider })}\n\n`
         )
       );
       controller.close();
+    },
+    async cancel() {
+      // Refund the pre-reserved tokens if the client disconnected before any
+      // model produced a final token count. Without this, network drops would
+      // permanently reduce the user's daily quota by the estimated amount.
+      if (!tokensFinalized && reservedTokens > 0) {
+        try {
+          await userRef.update({
+            tokensUsedToday: FieldValue.increment(-reservedTokens),
+          });
+          tokensFinalized = true;
+        } catch (err) {
+          console.error('[generate] Failed to refund reserved tokens on stream cancel:', err);
+        }
+      }
     },
   });
 

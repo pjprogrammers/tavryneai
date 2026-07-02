@@ -63,9 +63,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
     }
 
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-      return NextResponse.json({ error: 'Only HTTP(S) URLs are allowed' }, { status: 400 });
-      }
+    if (parsed.protocol !== 'https:') {
+      return NextResponse.json({ error: 'Only HTTPS URLs are allowed' }, { status: 400 });
+    }
 
     // SECURITY: Block private/internal hostnames before DNS resolution
     if (isBlockedHost(parsed.hostname)) {
@@ -92,35 +92,43 @@ export async function POST(request: Request) {
 
     const canonicalUrl = parsed.toString();
 
-    // HEAD request with redirects disabled
+    // HEAD request with redirects disabled — REQUIRED. If we cannot validate
+    // the upstream image ourselves, we fail closed (reject the upload) rather
+    // than silently forwarding untrusted bytes to Cloudinary.
+    let headRes: Response;
     try {
       const headController = new AbortController();
       const headTimeout = setTimeout(() => headController.abort(), 10_000);
-      const headRes = await fetch(canonicalUrl, {
+      headRes = await fetch(canonicalUrl, {
         method: 'HEAD',
         redirect: 'manual',
         signal: headController.signal,
       });
       clearTimeout(headTimeout);
+    } catch (err) {
+      console.warn('[reupload-image] HEAD pre-check failed:', err);
+      return NextResponse.json({ error: 'Could not validate image URL' }, { status: 400 });
+    }
 
-      // SECURITY: If the server responds with a redirect, reject (prevents open redirect abuse)
-      if (headRes.status >= 300 && headRes.status < 400) {
-        return NextResponse.json({ error: 'Redirects are not supported' }, { status: 400 });
-      }
+    // SECURITY: If the server responds with a redirect, reject (prevents open redirect abuse)
+    if (headRes.status >= 300 && headRes.status < 400) {
+      return NextResponse.json({ error: 'Redirects are not supported' }, { status: 400 });
+    }
 
-      const contentType = headRes.headers.get('content-type') || '';
-      const contentLength = parseInt(headRes.headers.get('content-length') || '0', 10);
+    if (!headRes.ok) {
+      return NextResponse.json({ error: 'Image URL returned an error' }, { status: 400 });
+    }
 
-      const isAllowedMime = ALLOWED_CONTENT_TYPES.some((t) => contentType.startsWith(t));
-      if (!isAllowedMime) {
-        return NextResponse.json({ error: 'URL does not point to a supported image type' }, { status: 400 });
-      }
+    const contentType = headRes.headers.get('content-type') || '';
+    const contentLength = parseInt(headRes.headers.get('content-length') || '0', 10);
 
-      if (contentLength > MAX_FILE_SIZE) {
-        return NextResponse.json({ error: 'Image exceeds 10MB limit' }, { status: 400 });
-      }
-    } catch {
-      // HEAD may not be supported; proceed and let Cloudinary validate
+    const isAllowedMime = ALLOWED_CONTENT_TYPES.some((t) => contentType.startsWith(t));
+    if (!isAllowedMime) {
+      return NextResponse.json({ error: 'URL does not point to a supported image type' }, { status: 400 });
+    }
+
+    if (contentLength > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'Image exceeds 10MB limit' }, { status: 400 });
     }
 
     // Rehost through Cloudinary

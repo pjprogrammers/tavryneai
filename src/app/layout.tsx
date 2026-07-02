@@ -10,7 +10,9 @@ import { ChunkErrorHandler } from '@/components/shared/ChunkErrorHandler';
 const SITE_URL = 'https://tavryneai.vercel.app';
 const SITE_NAME = 'Tavryne AI';
 const SITE_DESCRIPTION = 'Turn any idea into a working app through conversation. Tavryne AI is the browser-based AI vibe coding platform that generates production-ready code with natural language. Free tier with 10,000 tokens daily. No credit card needed.';
-const OG_IMAGE = '/preview.png';
+const OG_IMAGE = '/ogimage.png';
+const OG_IMAGE_WIDTH = 1024;
+const OG_IMAGE_HEIGHT = 541;
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -29,7 +31,12 @@ const mono = JetBrains_Mono({
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#11111b',
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#7C3AED' },
+    { media: '(prefers-color-scheme: dark)', color: '#0B1020' },
+  ],
 };
 
 export const metadata: Metadata = {
@@ -87,23 +94,40 @@ export const metadata: Metadata = {
   alternates: {
     canonical: SITE_URL,
     languages: { 'en-US': SITE_URL },
+    media: { 'only screen and (max-width: 600px)': SITE_URL },
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-48x48.png', sizes: '48x48', type: 'image/png' },
+      { url: '/icon-96x96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: SITE_URL,
-    siteName: 'Tavryne AI',
+    siteName: SITE_NAME,
     title: 'Tavryne AI — AI Vibe Coding Platform | Turn Ideas Into Apps',
     description: SITE_DESCRIPTION,
     images: [
       {
         url: OG_IMAGE,
-        width: 1200,
-        height: 630,
+        secureUrl: `${SITE_URL}${OG_IMAGE}`,
+        width: OG_IMAGE_WIDTH,
+        height: OG_IMAGE_HEIGHT,
         alt: 'Tavryne AI — Browser-Based AI Vibe Coding Platform',
+        type: 'image/jpeg',
       },
     ],
     countryName: 'United States',
+    emails: ['support@tavryneai.com'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -111,7 +135,12 @@ export const metadata: Metadata = {
     creator: '@tavryneai',
     title: 'Tavryne AI — AI Vibe Coding Platform | Turn Ideas Into Apps',
     description: SITE_DESCRIPTION,
-    images: [OG_IMAGE],
+    images: [
+      {
+        url: OG_IMAGE,
+        alt: 'Tavryne AI — AI Vibe Coding Platform',
+      },
+    ],
   },
   appleWebApp: {
     capable: true,
@@ -125,9 +154,8 @@ export const metadata: Metadata = {
     },
   },
   other: {
-    'google-site-verification': 'YOUR_GOOGLE_VERIFICATION_CODE',
-    'msvalidate.01': 'YOUR_BING_VERIFICATION_CODE',
-    'yandex-verification': 'YOUR_YANDEX_VERIFICATION_CODE',
+    'og:email': 'support@tavryneai.com',
+    'rating': 'General',
   },
 };
 
@@ -136,19 +164,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning className={`${jakarta.variable} ${mono.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
-        <link rel="mask-icon" href="/favicon.svg" color="#cba6f7" />
-        <meta name="msapplication-TileColor" content="#11111b" />
-        <meta name="msapplication-TileImage" content="/favicon.png" />
-        <meta name="theme-color" content="#11111b" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icon-16x16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/icon-48x48.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="msapplication-TileColor" content="#7C3AED" />
+        <meta name="msapplication-TileImage" content="/icon-144x144.png" />
+        <meta name="theme-color" content="#0B1020" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0B1020" />
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#7C3AED" />
+        <meta name="color-scheme" content="dark light" />
 
         <link rel="preconnect" href="https://firestore.googleapis.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
         <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+        <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
+        <link rel="dns-prefetch" href="https://integrate.api.nvidia.com" />
+        <link rel="dns-prefetch" href="https://api.opencode.ai" />
+        <link rel="dns-prefetch" href="https://openrouter.ai" />
 
         <script
           dangerouslySetInnerHTML={{

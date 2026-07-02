@@ -76,7 +76,6 @@ interface PanelStore {
   setCustomPreviewSize: (w: number, h: number) => void;
   addRecentFile: (path: string) => void;
   setShowAgentTimeline: (show: boolean) => void;
-  resetLayout: () => void;
 }
 
 const STORAGE_KEY = 'tavryne-panel-layout';
@@ -156,9 +155,5 @@ export const usePanelStore = create<PanelStore>((set, get) => {
       persist({ recentFiles: recent });
     },
     setShowAgentTimeline: (show) => set({ showAgentTimeline: show }),
-    resetLayout: () => {
-      set(defaults);
-      try { localStorage.removeItem(STORAGE_KEY); } catch {}
-    },
   };
 });

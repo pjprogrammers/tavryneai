@@ -1,39 +1,95 @@
 'use client';
 import * as React from 'react';
-
 import { cn } from '@/lib/utils/cn';
 
 interface DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
+  ariaLabel?: string;
+  ariaLabelledBy?: string;
 }
 
-function Dialog({ open, onOpenChange, children }: DialogProps) {
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'area[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+function Dialog({ open, onOpenChange, children, ariaLabel, ariaLabelledBy }: DialogProps) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const previousFocusRef = React.useRef<HTMLElement | null>(null);
+
   React.useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onOpenChange(false);
+    if (!open) return;
+
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    document.body.style.overflow = 'hidden';
+
+    // Focus the first focusable element inside the dialog on open.
+    const id = window.setTimeout(() => {
+      const root = containerRef.current;
+      if (!root) return;
+      const focusable = root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+      const target = focusable[0];
+      if (target) target.focus();
+    }, 0);
+
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onOpenChange(false);
+        return;
+      }
+      if (e.key !== 'Tab' || !containerRef.current) return;
+      // Simple focus trap: keep tabbing inside the dialog.
+      const focusable = Array.from(
+        containerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
-    if (open) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-    }
+
+    document.addEventListener('keydown', handleKey);
+
     return () => {
-      document.removeEventListener('keydown', handleEscape);
+      window.clearTimeout(id);
+      document.removeEventListener('keydown', handleKey);
       document.body.style.overflow = '';
+      // Restore focus to the element that opened the dialog.
+      previousFocusRef.current?.focus?.();
     };
   }, [open, onOpenChange]);
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
         onClick={() => onOpenChange(false)}
-        aria-label="Close"
+        aria-hidden="true"
       />
-      <div className="relative z-50 w-full max-w-lg mx-4 animate-slide-up">
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledBy}
+        className="relative z-50 w-full max-w-lg mx-4 animate-slide-up"
+      >
         {children}
       </div>
     </div>

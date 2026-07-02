@@ -16,16 +16,17 @@ const SECURITY_HEADERS = {
 
 const CSP_DIRECTIVES = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://cdn.jsdelivr.net",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://cdn.jsdelivr.net https://unpkg.com https://esm.sh https://checkout.razorpay.com",
   "worker-src 'self' blob:",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
-  "img-src 'self' data: blob: https://res.cloudinary.com",
-  "font-src 'self' https://fonts.gstatic.com",
-  "connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://api.github.com https://api.cloudinary.com https://res.cloudinary.com https://accounts.google.com https://fonts.googleapis.com https://cdn.jsdelivr.net https://unpkg.com https://esm.sh",
-  "frame-src 'self' https://accounts.google.com https://accounts.youtube.com https://*.firebaseapp.com https://github.com https://*.githubusercontent.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://unpkg.com",
+  "img-src 'self' data: blob: https: http://localhost:* https://res.cloudinary.com https://firebasestorage.googleapis.com https://*.googleusercontent.com https://avatars.githubusercontent.com https://avatars0.githubusercontent.com https://avatars1.githubusercontent.com https://avatars2.githubusercontent.com https://avatars3.githubusercontent.com https://*.twimg.com https://abs.twimg.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "media-src 'self' data: blob: https://res.cloudinary.com https://firebasestorage.googleapis.com",
+  "connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://api.github.com https://api.cloudinary.com https://res.cloudinary.com https://accounts.google.com https://fonts.googleapis.com https://cdn.jsdelivr.net https://unpkg.com https://esm.sh https://integrate.api.nvidia.com https://api.opencode.ai https://openrouter.ai https://*.opencode.ai https://*.vercel.app",
+  "frame-src 'self' blob: https://accounts.google.com https://accounts.youtube.com https://*.firebaseapp.com https://*.firebaseio.com https://github.com https://*.githubusercontent.com https://vercel.com https://*.vercel.com https://checkout.razorpay.com",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  "form-action 'self' https://accounts.google.com https://github.com",
   "frame-ancestors 'none'",
 ].join('; ');
 
@@ -57,6 +58,14 @@ export function middleware(request: NextRequest) {
     if (SUSPICIOUS_PATTERNS.some((p) => userAgent.toLowerCase().includes(p))) {
       console.warn(`[Security] Suspicious UA: ${userAgent}`);
     }
+  }
+
+  // Block the canonical /admin route when an obfuscated path is configured.
+  // Only /{ADMIN_PATH} is allowed in that case. The default route /admin still
+  // works when ADMIN_PATH is unset or set to 'admin'.
+  const adminPath = (process.env.ADMIN_PATH || 'admin').replace(/^\/+|\/+$/g, '');
+  if (adminPath !== 'admin' && (pathname === '/admin' || pathname.startsWith('/admin/'))) {
+    return new NextResponse('Not Found', { status: 404 });
   }
 
   return response;

@@ -1,8 +1,8 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useProjectStore } from '@/lib/store/useProjectStore';
-import { EditorLayout } from '@/components/editor/EditorLayout';
+import { ProjectWorkbench } from '@/components/workbench/ProjectWorkbench';
 import { LoadingState } from '@/components/shared/loading-state';
 
 export default function ProjectPage() {
@@ -21,7 +21,7 @@ export default function ProjectPage() {
 
   if (loading) {
     return (
-      <div className="h-screen bg-background">
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
         <LoadingState type="editor" />
       </div>
     );
@@ -44,7 +44,7 @@ export default function ProjectPage() {
   }
 
   return (
-    <EditorLayout
+    <ProjectWorkbench
       files={files}
       onFileUpdate={updateFile}
       project={currentProject}

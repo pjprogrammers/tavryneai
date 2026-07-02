@@ -1,5 +1,5 @@
 'use client';
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/useAuthStore';
@@ -15,6 +15,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { AvatarUpload } from '@/components/ui/avatar-upload';
 import { ThemeColorSelector } from '@/components/settings/ThemeColorSelector';
+import { PasswordStrength } from '@/components/auth/password-strength';
+import { evaluatePassword } from '@/lib/utils/password-strength';
+import { useUnsavedChangesGuard } from '@/lib/hooks/useUnsavedChangesGuard';
 
 export default function SettingsPage() {
   return (
@@ -72,6 +75,9 @@ function ProfileSettings() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const isDirty = displayName.trim() !== (user?.displayName || '').trim();
+  useUnsavedChangesGuard(isDirty);
+
   const handleSave = async () => {
     clearError();
     setSaving(true);
@@ -121,7 +127,13 @@ function ProfileSettings() {
                 id="name"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
+                aria-describedby={isDirty ? 'profile-dirty' : undefined}
               />
+              {isDirty && (
+                <p id="profile-dirty" className="text-xs text-muted-foreground">
+                  Unsaved changes
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -137,8 +149,11 @@ function ProfileSettings() {
             </div>
           </div>
         </CardContent>
-        <div className="flex items-center justify-end px-6 pb-6">
-          <Button onClick={handleSave} disabled={saving}>
+        <div className="flex items-center justify-end gap-3 px-6 pb-6">
+          {isDirty && (
+            <span className="text-xs text-amber-600 dark:text-amber-400">Unsaved changes</span>
+          )}
+          <Button onClick={handleSave} disabled={saving || !isDirty}>
             {saving ? 'Saving...' : saved ? 'Saved!' : 'Save changes'}
           </Button>
         </div>
@@ -148,37 +163,97 @@ function ProfileSettings() {
 }
 
 function SecuritySettings() {
-  const { updatePassword, authError, clearError } = useAuthStore();
+  const { user, updatePassword, authError, clearError } = useAuthStore();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const handleUpdatePassword = async () => {
-    clearError();
-    if (newPassword !== confirmPassword) {
-      alert('Passwords do not match');
-      return;
+  const isDirty = currentPassword.length > 0 || newPassword.length > 0 || confirmPassword.length > 0;
+  useUnsavedChangesGuard(isDirty);
+
+  const isEmailProvider = user?.provider === 'email';
+  const isGmailProvider = user?.provider === 'google.com';
+  const isGithubProvider = user?.provider === 'github.com';
+  const isSocialProvider = isGmailProvider || isGithubProvider;
+
+  const evaluation = useMemo(
+    () => evaluatePassword(newPassword, { name: user?.displayName, email: user?.email }),
+    [newPassword, user?.displayName, user?.email]
+  );
+
+  const localValidation = useMemo(() => {
+    if (!currentPassword) return { valid: false, error: null as string | null };
+    if (!newPassword) return { valid: false, error: null as string | null };
+    if (!confirmPassword) return { valid: false, error: null as string | null };
+    if (!evaluation.isAcceptable) {
+      return { valid: false, error: 'Your new password does not meet all the security rules.' };
     }
-    if (newPassword.length < 6) {
-      alert('Password must be at least 6 characters');
+    if (newPassword !== confirmPassword) {
+      return { valid: false, error: 'New password and confirmation do not match.' };
+    }
+    if (newPassword === currentPassword) {
+      return { valid: false, error: 'Your new password must be different from your current password.' };
+    }
+    return { valid: true, error: null as string | null };
+  }, [currentPassword, newPassword, confirmPassword, evaluation.isAcceptable]);
+
+  const displayError = localError ?? localValidation.error;
+
+  const handleUpdatePassword = useCallback(async () => {
+    setLocalError(null);
+    clearError();
+    if (!localValidation.valid) {
+      setLocalError(localValidation.error);
       return;
     }
     setSaving(true);
     try {
-      await updatePassword(newPassword);
+      await updatePassword(currentPassword, newPassword);
       setSaved(true);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      setTimeout(() => setSaved(false), 2000);
+      setShowCurrent(false);
+      setShowNew(false);
+      setShowConfirm(false);
+      setTimeout(() => setSaved(false), 2500);
     } catch {
-      // error in authError state
+      // authError from store is already set and rendered
     } finally {
       setSaving(false);
     }
-  };
+  }, [currentPassword, newPassword, localValidation, updatePassword, clearError]);
+
+  const isSubmitDisabled = saving || !localValidation.valid;
+
+  if (isSocialProvider) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Password</CardTitle>
+            <CardDescription>Update your password</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              You signed in with {isGmailProvider ? 'Google' : 'GitHub'}, so you don&apos;t have a password set on this account.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              To set a password, use the &quot;Forgot password&quot; flow on the sign-in page. We&apos;ll send a secure link to your email
+              <span className="font-medium text-foreground"> {user?.email} </span>
+              that lets you choose one.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -188,25 +263,90 @@ function SecuritySettings() {
           <CardDescription>Update your password</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {authError && (
+          {(authError || displayError) && (
             <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm animate-fade-in">
-              {authError}
+              {authError || displayError}
             </div>
           )}
+
           <div className="space-y-2">
             <Label htmlFor="current">Current password</Label>
-            <Input id="current" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+            <div className="relative">
+              <Input
+                id="current"
+                type={showCurrent ? 'text' : 'password'}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                autoComplete="current-password"
+                disabled={saving}
+                className="pr-14"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrent((s) => !s)}
+                disabled={saving}
+                className="absolute inset-y-0 right-2 my-auto h-7 px-2 text-xs font-medium text-muted-foreground hover:text-foreground rounded-md transition-colors disabled:opacity-50"
+                aria-label={showCurrent ? 'Hide current password' : 'Show current password'}
+              >
+                {showCurrent ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="new">New password</Label>
-            <Input id="new" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+            <div className="relative">
+              <Input
+                id="new"
+                type={showNew ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+                disabled={saving}
+                className="pr-14"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNew((s) => !s)}
+                disabled={saving}
+                className="absolute inset-y-0 right-2 my-auto h-7 px-2 text-xs font-medium text-muted-foreground hover:text-foreground rounded-md transition-colors disabled:opacity-50"
+                aria-label={showNew ? 'Hide new password' : 'Show new password'}
+              >
+                {showNew ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            <PasswordStrength evaluation={evaluation} show={newPassword.length > 0} />
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="confirm">Confirm new password</Label>
-            <Input id="confirm" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+            <div className="relative">
+              <Input
+                id="confirm"
+                type={showConfirm ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+                disabled={saving}
+                className="pr-14"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm((s) => !s)}
+                disabled={saving}
+                className="absolute inset-y-0 right-2 my-auto h-7 px-2 text-xs font-medium text-muted-foreground hover:text-foreground rounded-md transition-colors disabled:opacity-50"
+                aria-label={showConfirm ? 'Hide confirmation' : 'Show confirmation'}
+              >
+                {showConfirm ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            {confirmPassword.length > 0 && newPassword !== confirmPassword && (
+              <p className="text-xs text-destructive">Passwords do not match</p>
+            )}
           </div>
-          <Button onClick={handleUpdatePassword} disabled={saving}>
-            {saving ? 'Updating...' : saved ? 'Updated!' : 'Update password'}
+
+          <Button onClick={handleUpdatePassword} disabled={isSubmitDisabled}>
+            {saving ? 'Updating...' : saved ? 'Password updated!' : 'Update password'}
           </Button>
         </CardContent>
       </Card>

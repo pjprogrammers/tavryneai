@@ -50,6 +50,17 @@
     --chart-5: 0 84% 60%;
     --gradient-from: 262 83% 58%;
     --gradient-to: 239 84% 67%;
+
+    /* Workbench tokens (light defaults) */
+    --wb-bg-0: 0 0% 100%;
+    --wb-bg-1: 220 14% 98%;
+    --wb-bg-2: 220 14% 96%;
+    --wb-border-soft: 220 13% 91%;
+    --wb-border-strong: 220 13% 80%;
+    --wb-shadow: 240 6% 10%;
+    --wb-aurora-a: 262 83% 58%;
+    --wb-aurora-b: 199 89% 60%;
+    --wb-aurora-c: 326 78% 60%;
   }
 
   .dark {
@@ -98,6 +109,17 @@
     --chart-5: 0 63% 31%;
     --gradient-from: 262 83% 58%;
     --gradient-to: 239 84% 67%;
+
+    /* Workbench tokens (dark defaults) */
+    --wb-bg-0: 240 10% 4%;
+    --wb-bg-1: 240 10% 7%;
+    --wb-bg-2: 240 8% 11%;
+    --wb-border-soft: 240 6% 16%;
+    --wb-border-strong: 240 6% 26%;
+    --wb-shadow: 0 0% 0%;
+    --wb-aurora-a: 262 83% 58%;
+    --wb-aurora-b: 199 89% 60%;
+    --wb-aurora-c: 326 78% 60%;
   }
 }
 
@@ -144,6 +166,204 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* ===== Workbench 3D / glass / aurora utilities ===== */
+  .wb-glass {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--wb-bg-1) / 0.78) 0%,
+      hsl(var(--wb-bg-1) / 0.62) 100%
+    );
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid hsl(var(--wb-border-soft) / 0.6);
+    box-shadow:
+      0 1px 0 0 hsl(var(--wb-border-soft) / 0.7) inset,
+      0 24px 60px -30px hsl(var(--wb-shadow) / 0.55),
+      0 6px 16px -10px hsl(var(--wb-shadow) / 0.45);
+  }
+  .wb-glass-strong {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--wb-bg-1) / 0.92) 0%,
+      hsl(var(--wb-bg-2) / 0.78) 100%
+    );
+    backdrop-filter: blur(28px) saturate(200%);
+    -webkit-backdrop-filter: blur(28px) saturate(200%);
+    border: 1px solid hsl(var(--wb-border-soft) / 0.8);
+  }
+  .wb-card {
+    background: linear-gradient(
+      160deg,
+      hsl(var(--wb-bg-1) / 0.78) 0%,
+      hsl(var(--wb-bg-2) / 0.55) 100%
+    );
+    border: 1px solid hsl(var(--wb-border-soft) / 0.55);
+    border-radius: 1rem;
+    box-shadow:
+      0 1px 0 0 hsl(var(--wb-border-soft) / 0.6) inset,
+      0 20px 50px -25px hsl(var(--wb-shadow) / 0.6);
+    position: relative;
+    overflow: hidden;
+  }
+  .wb-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      400px 200px at var(--mx, 50%) var(--my, 0%),
+      hsl(var(--wb-aurora-a) / 0.18),
+      transparent 60%
+    );
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+  .wb-card.is-hovered::before {
+    opacity: 1;
+  }
+  .wb-aurora {
+    background: radial-gradient(
+        60% 50% at 20% 0%,
+        hsl(var(--wb-aurora-a) / 0.22),
+        transparent 60%
+      ),
+      radial-gradient(
+        50% 40% at 90% 10%,
+        hsl(var(--wb-aurora-b) / 0.18),
+        transparent 60%
+      ),
+      radial-gradient(
+        40% 40% at 50% 100%,
+        hsl(var(--wb-aurora-c) / 0.18),
+        transparent 60%
+      );
+  }
+  .wb-grid {
+    background-image: linear-gradient(
+        to right,
+        hsl(var(--wb-border-soft) / 0.35) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        hsl(var(--wb-border-soft) / 0.35) 1px,
+        transparent 1px
+      );
+    background-size: 36px 36px;
+    background-position: -1px -1px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 80%);
+  }
+  .wb-tilt {
+    transform-style: preserve-3d;
+    transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.4s ease;
+  }
+  .wb-press {
+    transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .wb-press:active {
+    transform: scale(0.97);
+  }
+  .wb-divider {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--wb-border-soft) / 0.8),
+      transparent
+    );
+    height: 1px;
+  }
+  .wb-chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium;
+    background: hsl(var(--wb-bg-2) / 0.7);
+    border: 1px solid hsl(var(--wb-border-soft) / 0.7);
+  }
+  .wb-pulse-dot {
+    position: relative;
+  }
+  .wb-pulse-dot::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 9999px;
+    background: currentColor;
+    opacity: 0.4;
+    animation: wb-ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+  .wb-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .wb-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--primary) / 0.15),
+      transparent
+    );
+    transform: translateX(-100%);
+    animation: wb-shimmer 2.4s linear infinite;
+  }
+  .safe-pb {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+  .safe-pt {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+}
+
+@keyframes wb-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  80%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+@keyframes wb-shimmer {
+  100% {
+    transform: translateX(200%);
+  }
+}
+@keyframes wb-spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes wb-orbit {
+  0% {
+    transform: rotate(0deg) translateX(var(--r, 60px)) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(var(--r, 60px)) rotate(-360deg);
+  }
+}
+@keyframes wb-float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes wb-glow {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4); }
+  50% { box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
+}
+.wb-anim-orbit {
+  animation: wb-orbit 8s linear infinite;
+}
+.wb-anim-float {
+  animation: wb-float-y 4s ease-in-out infinite;
+}
+.wb-anim-glow {
+  animation: wb-glow 2s ease-in-out infinite;
+}
+.wb-anim-spin-slow {
+  animation: wb-spin-slow 14s linear infinite;
 }
 
 @layer components {

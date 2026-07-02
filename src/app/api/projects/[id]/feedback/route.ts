@@ -5,8 +5,8 @@ import { checkRateLimit } from '@/lib/server-rate-limit';
 import { z } from 'zod';
 
 const feedbackSchema = z.object({
-  messageId: z.string().min(1),
-  filename: z.string().min(1),
+  messageId: z.string().min(1).max(1500),
+  filename: z.string().min(1).max(500),
   status: z.enum(['accepted', 'rejected']),
 });
 

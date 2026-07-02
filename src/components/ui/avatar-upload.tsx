@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import Image from 'next/image';
+import { useState, useRef, useEffect } from 'react';
+import NextImage from 'next/image';
 import {
   Camera,
   X,
@@ -145,24 +145,23 @@ export const AvatarUpload = ({
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'tavryneai-uploads');
-      formData.append('folder', 'avatars');
 
-      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dhrxbpqsa';
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      const res = await fetch('/api/user/avatar', {
         method: 'POST',
         body: formData,
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || 'Upload failed');
+      if (!res.ok || !data.success || !data.imageUrl) {
+        throw new Error(data.error || 'Upload failed');
+      }
 
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      await saveAvatarUrl(data.secure_url);
+      await saveAvatarUrl(data.imageUrl);
 
-      if (onUploadSuccess) onUploadSuccess(data.secure_url);
+      if (onUploadSuccess) onUploadSuccess(data.imageUrl);
 
       setTimeout(() => {
         setShowModal(false);
@@ -176,14 +175,11 @@ export const AvatarUpload = ({
     }
   };
 
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      processFile(file);
-    },
-    [firebaseUser, onUploadSuccess, updateProfile],
-  );
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    void processFile(file);
+  };
 
   const handleUrlSubmit = async () => {
     if (!firebaseUser) return;
@@ -194,8 +190,8 @@ export const AvatarUpload = ({
     setUrlProcessing(true);
 
     try {
-      if (!urlInput.match(/^https?:\/\/.+/i)) {
-        throw new Error('Please enter a valid URL starting with http:// or https://');
+      if (!urlInput.match(/^https:\/\/.+/i)) {
+        throw new Error('Please enter a valid HTTPS URL');
       }
 
       const response = await fetch('/api/reupload-image', {
@@ -247,7 +243,7 @@ export const AvatarUpload = ({
 
   const handleUrlPreview = (url: string) => {
     setUrlInput(url);
-    if (url.match(/^https?:\/\/.+/i)) {
+    if (url.match(/^https:\/\/.+/i)) {
       setUrlPreview(null);
       setUrlError(false);
     } else {
@@ -408,7 +404,7 @@ export const AvatarUpload = ({
                       disabled={isUploading}
                       title={avatar.seed}
                     >
-                      <Image
+                      <NextImage
                         src={avatar.src}
                         alt={avatar.seed}
                         width={64}
@@ -453,11 +449,14 @@ export const AvatarUpload = ({
                 {!urlProcessing && urlPreview && !urlError && (
                   <div>
                     <span className="text-xs text-muted-foreground">Preview</span>
-                    <div className="mt-1 w-20 h-20 rounded-xl overflow-hidden border border-border">
-                      <img
+                    <div className="mt-1 w-20 h-20 rounded-xl overflow-hidden border border-border relative">
+                      <NextImage
                         src={urlPreview}
                         alt="Preview"
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                        unoptimized
                         onError={() => setUrlError(true)}
                       />
                     </div>

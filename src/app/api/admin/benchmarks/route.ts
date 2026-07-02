@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminFirestore } from '@/lib/firebase/admin';
-import { verifyAuth, isErrorResponse } from '@/lib/firebase/auth';
+import { adminFirestore } from '@/lib/firebase/admin';
+import { isErrorResponse, requireAdmin } from '@/lib/firebase/auth';
 import { checkRateLimit } from '@/lib/server-rate-limit';
-import { isAdminEmail } from '@/lib/admin';
 
 export async function GET(req: NextRequest) {
-  const auth = await verifyAuth(req);
+  const auth = await requireAdmin(req);
   if (isErrorResponse(auth)) return auth;
 
   const rl = checkRateLimit(`admin-benchmarks:${auth.uid}`, { maxTokens: 10, refillRate: 1, refillIntervalMs: 6000 });
@@ -14,11 +13,6 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const userRecord = await adminAuth.getUser(auth.uid);
-    if (!userRecord.customClaims?.admin && !isAdminEmail(auth.email)) {
-      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-    }
-
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
     const todayStart = new Date(todayStr);

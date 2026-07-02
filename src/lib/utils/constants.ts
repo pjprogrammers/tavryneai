@@ -20,7 +20,11 @@ export const MODEL_TIMEOUT_MS = 300000;
 export const FALLBACK_NOTIFICATION_SECONDS = 5;
 export const MAX_CONSECUTIVE_FAILURES = 3;
 
-export const FILE_EXTENSIONS: Record<string, string> = {
+export const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dhrxbpqsa';
+export const CLOUDINARY_UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET || 'tavryneai-uploads';
+export const CLOUDINARY_BASE_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+
+export const LANGUAGE_MAP: Record<string, string> = {
   ts: 'typescript',
   tsx: 'typescript',
   js: 'javascript',
@@ -30,7 +34,3 @@ export const FILE_EXTENSIONS: Record<string, string> = {
   md: 'markdown',
   html: 'html',
 };
-
-export const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dhrxbpqsa';
-export const CLOUDINARY_UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET || 'tavryneai-uploads';
-export const CLOUDINARY_BASE_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;

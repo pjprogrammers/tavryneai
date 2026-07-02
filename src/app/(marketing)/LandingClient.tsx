@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -9,8 +8,8 @@ import { UserMenu } from '@/components/ui/user-menu';
 import { HeroParticles } from '@/components/particles/HeroParticles';
 import { TiltCard } from '@/components/landing/TiltCard';
 import { DecorativeShape } from '@/components/landing/GeometricSVG';
-
-const ThreeDShapes = dynamic(() => import('@/components/landing/ThreeDShapes').then(m => ({ default: m.ThreeDShapes })), { ssr: false });
+import { ThreeDShapes } from '@/components/landing/ThreeDShapes';
+import { useAuthStore } from '@/lib/store/useAuthStore';
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -72,6 +71,8 @@ const faqItems = [
 
 export default function LandingClient() {
   const [mobileMenu, setMobileMenu] = useState(false);
+  const isSignedIn = useAuthStore((s) => s.initialized && s.user !== null);
+  const showHeroCta = !isSignedIn;
 
   return (
     <main className="relative min-h-screen bg-background">
@@ -80,9 +81,7 @@ export default function LandingClient() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2" aria-label="Tavryne AI Home">
-              <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center">
-                <span className="text-white text-xs font-bold">T</span>
-              </div>
+              <img src="/icon-32x32.png" alt="" className="h-8 w-8 rounded-lg" />
               <span className="text-lg font-semibold text-foreground">Tavryne AI</span>
             </Link>
             <nav className="hidden md:flex items-center gap-8" aria-label="Main navigation">
@@ -165,18 +164,26 @@ export default function LandingClient() {
               through conversation &mdash; powered by NVIDIA NIM, OpenCode Zen, and OpenRouter.
             </motion.p>
 
-            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/register">
-                <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-lg rounded-xl shadow-xl shadow-primary/25">
-                  Start Building Free
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button size="lg" variant="outline" className="px-8 py-6 text-lg rounded-xl">
-                  Sign In
-                </Button>
-              </Link>
-            </motion.div>
+            {showHeroCta && (
+              <motion.div
+                variants={fadeUp}
+                initial="hidden"
+                animate="show"
+                exit={{ opacity: 0, y: -8, transition: { duration: 0.2 } }}
+                className="flex flex-col sm:flex-row gap-4 justify-center"
+              >
+                <Link href="/register">
+                  <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-lg rounded-xl shadow-xl shadow-primary/25">
+                    Start Building Free
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button size="lg" variant="outline" className="px-8 py-6 text-lg rounded-xl">
+                    Sign In
+                  </Button>
+                </Link>
+              </motion.div>
+            )}
 
             <motion.div
               variants={fadeUp}
@@ -423,9 +430,7 @@ export default function LandingClient() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-3">
-                <div className="h-7 w-7 rounded-lg gradient-primary flex items-center justify-center">
-                  <span className="text-white text-[10px] font-bold">T</span>
-                </div>
+                <img src="/icon-32x32.png" alt="" className="h-7 w-7 rounded-lg" />
                 <span className="text-sm font-semibold text-foreground">Tavryne AI</span>
               </div>
               <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">

@@ -12,6 +12,7 @@ const createProjectSchema = z.object({
 });
 
 const ALLOWED_FRAMEWORKS = ['nextjs', 'react', 'vue', 'svelte', 'express', 'vanilla', 'python'];
+const MAX_ACTIVE_PROJECTS_PER_USER = 100;
 
 export async function GET(req: NextRequest) {
   const auth = await verifyAuth(req);
@@ -78,6 +79,26 @@ export async function POST(req: NextRequest) {
 
     const { title, description, framework } = body;
     const safeFramework = framework && ALLOWED_FRAMEWORKS.includes(framework) ? framework : 'nextjs';
+
+    // Enforce a per-user cap on active projects to prevent runaway creation
+    // and DoS amplification of the analytics/cleanup endpoints.
+    const activeCountSnap = await adminFirestore
+      .collection('projects')
+      .where('userId', '==', auth.uid)
+      .where('status', '==', 'active')
+      .count()
+      .get();
+    const activeCount = activeCountSnap.data().count;
+    if (activeCount >= MAX_ACTIVE_PROJECTS_PER_USER) {
+      return NextResponse.json(
+        {
+          error: `You have reached the maximum of ${MAX_ACTIVE_PROJECTS_PER_USER} active projects. Please delete some before creating new ones.`,
+          code: 'PROJECT_LIMIT',
+          limit: MAX_ACTIVE_PROJECTS_PER_USER,
+        },
+        { status: 429 },
+      );
+    }
 
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 72 * 60 * 60 * 1000);

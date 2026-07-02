@@ -1,0 +1,56 @@
+- generic [ref=f4e2]:
+  - complementary "Primary" [ref=f4e3]:
+    - link "Tavryne AI home" [ref=f4e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f4e7]: T
+      - generic [ref=f4e8]: TavryneAI
+    - navigation "Main" [ref=f4e9]:
+      - link "Home" [ref=f4e10] [cursor=pointer]:
+        - /url: /
+        - img [ref=f4e12]
+        - text: Home
+      - link "Dashboard" [ref=f4e14] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=f4e16]
+        - text: Dashboard
+      - link "Analytics" [ref=f4e18] [cursor=pointer]:
+        - /url: /analytics
+        - img [ref=f4e20]
+        - text: Analytics
+      - link "Settings" [ref=f4e22] [cursor=pointer]:
+        - /url: /settings
+        - img [ref=f4e24]
+        - text: Settings
+    - link "Open settings for user" [ref=f4e28] [cursor=pointer]:
+      - /url: /settings
+      - generic [ref=f4e30]: "?"
+      - generic [ref=f4e31]:
+        - paragraph [ref=f4e32]: User
+        - paragraph
+  - main [ref=f4e33]:
+    - generic [ref=f4e35]:
+      - generic [ref=f4e37]:
+        - generic [ref=f4e38]:
+          - heading "Usage Analytics" [level=1] [ref=f4e39]
+          - paragraph [ref=f4e40]: Track your token usage and activity
+        - tablist [ref=f4e42]:
+          - tab "Daily" [selected] [ref=f4e43] [cursor=pointer]
+          - tab "Monthly" [ref=f4e44] [cursor=pointer]
+          - tab "Yearly" [ref=f4e45] [cursor=pointer]
+          - tab "All Time" [ref=f4e46] [cursor=pointer]
+      - generic [ref=f4e47]:
+        - generic [ref=f4e48]:
+          - generic [ref=f4e49]:
+            - heading "Daily Token Usage" [level=3] [ref=f4e50]
+            - paragraph [ref=f4e51]: Token consumption by day
+          - paragraph [ref=f4e53]: No data yet. Start generating to see usage.
+        - generic [ref=f4e54]:
+          - generic [ref=f4e55]:
+            - heading "Model Distribution" [level=3] [ref=f4e56]
+            - paragraph [ref=f4e57]: Token usage by AI model
+          - paragraph [ref=f4e59]: No model data yet.
+      - generic [ref=f4e60]:
+        - generic [ref=f4e61]:
+          - heading "Activity Log" [level=3] [ref=f4e62]
+          - paragraph [ref=f4e63]: Recent generation activity
+        - paragraph [ref=f4e65]: No activity yet. Start generating code to see your activity log.

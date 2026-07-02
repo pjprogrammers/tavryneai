@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: '/:path*',
+        source: '/:path((?!api/).*)',
         has: [
           {
             type: 'header',
@@ -55,7 +55,7 @@ const nextConfig: NextConfig = {
   },
 
   async rewrites() {
-    const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
+    const adminPath = process.env.ADMIN_PATH || 'admin';
     if (adminPath === 'admin') return [];
     return [
       { source: `/${adminPath}`, destination: '/admin' },

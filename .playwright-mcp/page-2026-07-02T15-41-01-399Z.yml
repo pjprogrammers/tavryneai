@@ -1,0 +1,57 @@
+- generic [ref=f2e3]:
+  - generic [ref=f2e4]:
+    - link "T TavryneAI" [ref=f2e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f2e7]: T
+      - generic [ref=f2e8]: TavryneAI
+    - generic [ref=f2e9]:
+      - heading "Turn ideas into apps, one prompt at a time." [level=2] [ref=f2e10]
+      - paragraph [ref=f2e11]: TavryneAI turns your ideas into working applications. Prompt, preview, deploy — all from a single browser tab.
+      - list [ref=f2e12]:
+        - listitem [ref=f2e13]:
+          - img [ref=f2e15]
+          - text: 3 AI providers, automatic fallback
+        - listitem [ref=f2e17]:
+          - img [ref=f2e19]
+          - text: In-browser code bundling & preview
+        - listitem [ref=f2e21]:
+          - img [ref=f2e23]
+          - text: Your projects, your data, secured
+    - paragraph [ref=f2e25]: Already used by makers shipping full apps in a weekend.
+  - generic [ref=f2e28]:
+    - generic [ref=f2e29]:
+      - link "T TavryneAI" [ref=f2e30] [cursor=pointer]:
+        - /url: /
+        - generic [ref=f2e32]: T
+        - generic [ref=f2e33]: TavryneAI
+      - heading "Create your account" [level=1] [ref=f2e34]
+      - paragraph [ref=f2e35]: Start building apps with AI-powered conversations
+    - generic [ref=f2e36]:
+      - generic [ref=f2e37]:
+        - text: Full Name
+        - textbox "Full Name" [ref=f2e38]:
+          - /placeholder: John Doe
+      - generic [ref=f2e39]:
+        - text: Email
+        - textbox "Email" [ref=f2e40]:
+          - /placeholder: you@example.com
+      - generic [ref=f2e41]:
+        - text: Password
+        - generic [ref=f2e42]:
+          - textbox "Password" [ref=f2e43]:
+            - /placeholder: Create a password
+          - button "Show password" [ref=f2e44] [cursor=pointer]: Show
+        - generic [ref=f2e51]: Password strength
+      - button "Create Account" [disabled]
+    - generic [ref=f2e56]: Or continue with
+    - generic [ref=f2e57]:
+      - button "Google" [ref=f2e58] [cursor=pointer]:
+        - img [ref=f2e59]
+        - text: Google
+      - button "GitHub" [ref=f2e64] [cursor=pointer]:
+        - img [ref=f2e65]
+        - text: GitHub
+    - generic [ref=f2e67]:
+      - text: Already have an account?
+      - link "Sign in" [ref=f2e68] [cursor=pointer]:
+        - /url: /login

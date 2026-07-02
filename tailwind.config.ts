@@ -117,11 +117,40 @@ module.exports = {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-10px)" },
         },
+        "aurora": {
+          "0%, 100%": { transform: "translate3d(0,0,0) rotate(0deg) scale(1)" },
+          "50%": { transform: "translate3d(2%, -2%, 0) rotate(8deg) scale(1.05)" },
+        },
+        "wb-rise": {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "wb-fade": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "wb-pop": {
+          "0%": { opacity: "0", transform: "scale(0.92)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "gradient-pan": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "float": "float 6s ease-in-out infinite",
+        "aurora": "aurora 18s ease-in-out infinite",
+        "wb-rise": "wb-rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both",
+        "wb-fade": "wb-fade 0.5s ease-out both",
+        "wb-pop": "wb-pop 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both",
+        "gradient-pan": "gradient-pan 6s ease-in-out infinite",
+      },
+      backgroundImage: {
+        "wb-aurora":
+          "radial-gradient(60% 50% at 20% 0%, hsl(var(--primary) / 0.35), transparent 60%), radial-gradient(50% 40% at 90% 10%, hsl(199 89% 60% / 0.25), transparent 60%), radial-gradient(40% 40% at 50% 100%, hsl(326 78% 60% / 0.22), transparent 60%)",
       },
     },
   },

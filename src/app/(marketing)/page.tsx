@@ -34,9 +34,9 @@ export const metadata: Metadata = {
     siteName: 'Tavryne AI',
     images: [
       {
-        url: `${SITE_URL}/preview.png`,
-        width: 1200,
-        height: 630,
+        url: `${SITE_URL}/ogimage.png`,
+        width: 1024,
+        height: 541,
         alt: 'Tavryne AI — AI Vibe Coding Platform',
       },
     ],
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     title: 'Tavryne AI — Turn Ideas Into Apps with AI Vibe Coding',
     description:
       'Describe what you want to build. Tavryne AI generates production-ready code through conversation. Free tier with 10,000 tokens daily.',
-    images: [`${SITE_URL}/preview.png`],
+    images: [`${SITE_URL}/ogimage.png`],
   },
   alternates: {
     canonical: SITE_URL,

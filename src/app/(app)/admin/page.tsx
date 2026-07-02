@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useAuthStore } from '@/lib/store/useAuthStore';
+import { useTick } from '@/lib/hooks/useTick';
 
 interface AdminData {
   stats: {
@@ -72,21 +73,18 @@ function ChartBar({ day, tokens, max }: { day: string; tokens: number; max: numb
 }
 
 function RelativeTime({ iso }: { iso: string }) {
-  const [label, setLabel] = useState('');
-  useEffect(() => {
-    const update = () => {
-      const diff = Date.now() - new Date(iso).getTime();
-      const sec = Math.floor(diff / 1000);
-      if (sec < 60) setLabel('just now');
-      else if (sec < 3600) setLabel(`${Math.floor(sec / 60)}m ago`);
-      else if (sec < 86400) setLabel(`${Math.floor(sec / 3600)}h ago`);
-      else setLabel(`${Math.floor(sec / 86400)}d ago`);
-    };
-    update();
-    const id = setInterval(update, 30000);
-    return () => clearInterval(id);
-  }, [iso]);
-  return <span className="text-muted-foreground">{label}</span>;
+  const now = useTick(30000);
+  const diff = Math.max(0, now - new Date(iso).getTime());
+  const sec = Math.floor(diff / 1000);
+  let label = 'just now';
+  if (sec >= 86400) label = `${Math.floor(sec / 86400)}d ago`;
+  else if (sec >= 3600) label = `${Math.floor(sec / 3600)}h ago`;
+  else if (sec >= 60) label = `${Math.floor(sec / 60)}m ago`;
+  return (
+    <time className="text-muted-foreground" dateTime={iso} title={new Date(iso).toLocaleString()}>
+      {label}
+    </time>
+  );
 }
 
 const SORT_OPTIONS = [

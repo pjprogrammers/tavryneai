@@ -18,7 +18,7 @@ export function SoftwareApplicationSchema() {
         description:
           'Tavryne AI is a browser-based AI-powered development environment that generates production-ready code through natural conversation. Built with Next.js, it supports multi-provider AI routing through NVIDIA NIM, OpenCode Zen, and OpenRouter.',
         url: SITE_URL,
-        image: `${SITE_URL}/preview.png`,
+        image: `${SITE_URL}/ogimage.png`,
         softwareVersion: '1.0.0',
         offers: {
           '@type': 'Offer',
@@ -46,7 +46,7 @@ export function SoftwareApplicationSchema() {
           'Screenshot/image-based input',
           'Multi-agent parallel execution',
         ],
-        screenshot: `${SITE_URL}/preview.png`,
+        screenshot: `${SITE_URL}/ogimage.png`,
       }}
     />
   );

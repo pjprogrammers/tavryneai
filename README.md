@@ -18,16 +18,17 @@
   <a href="#features"><img src="https://img.shields.io/badge/Features-13-brightgreen?style=flat-square" alt="13 Features"/></a>
   <a href="#api-routes"><img src="https://img.shields.io/badge/API_Routes-21-blue?style=flat-square" alt="21 API Routes"/></a>
   <a href="#-ai-providers"><img src="https://img.shields.io/badge/AI_Models-22+-orange?style=flat-square" alt="22+ AI Models"/></a>
+  <a href="#-admin-management"><img src="https://img.shields.io/badge/Admin-Signed_Claim_%2B_Obfuscated_Path-ef4444?style=flat-square" alt="Admin security"/></a>
 
   <br/><br/>
 
   <table style="border-collapse: collapse; border: none; max-width: 800px; width: 100%;">
     <tr>
       <td style="border: none; padding: 0;">
-        <table style="border-collapse: collapse; border: none; width: 100%; background: linear-gradient(135deg, rgba(251,191,36,0.1), rgba(239,68,68,0.05)); border-radius: 16px; padding: 28px; backdrop-filter: blur(12px); border: 1px solid rgba(251,191,36,0.2);">
+                <table style="border-collapse: collapse; border: none; width: 100%; background: linear-gradient(135deg, rgba(251,191,36,0.1), rgba(239,68,68,0.05)); border-radius: 16px; padding: 28px; backdrop-filter: blur(12px); border: 1px solid rgba(251,191,36,0.2);">
           <tr><td style="border: none; text-align: center;">
             <span style="font-size: 1.05rem; color: #e2e8f0; line-height: 1.6;">
-              ✦ <strong>3 AI Providers</strong> with automatic fallback &nbsp;✦&nbsp; <strong>In-browser bundling</strong> via esbuild-wasm &nbsp;✦&nbsp; <strong>Monaco Editor</strong> &nbsp;✦&nbsp; <strong>PWA ready</strong>
+              ✦ <strong>3 AI Providers</strong> with automatic fallback &nbsp;✦&nbsp; <strong>In-browser bundling</strong> via esbuild-wasm &nbsp;✦&nbsp; <strong>Monaco Editor</strong> &nbsp;✦&nbsp; <strong>Signed admin claims</strong> &nbsp;✦&nbsp; <strong>Path-obfuscated admin panel</strong>
             </span>
           </td></tr>
         </table>
@@ -278,7 +279,70 @@ Fallback chain: **NVIDIA → OpenCode Zen → OpenRouter** (with 3 full retry cy
 
 ---
 
-## <span style="border-bottom: 2px solid #f97316; padding-bottom: 4px;">&#x1F4F0; Tech Stack</span>
+## <span style="border-bottom: 2px solid #f97316; padding-bottom: 4px;">&#x1F6E1; Admin Management</span>
+
+The admin panel is **fully obfuscated and signed-claim protected**. The URL itself is a non-secret — security comes from the Firebase `admin` custom claim and server-side verification, but the canonical `/admin` route returns 404 when an obfuscated path is configured.
+
+### Grant / Revoke Admin (recommended)
+
+The fastest and cleanest way. Uses the **signed** `admin` custom claim, which is included in every ID token the user receives and is **untamperable** by the client.
+
+```powershell
+# Grant admin to a user
+npm run admin -- grant pjcoders@gmail.com
+
+# Revoke admin
+npm run admin -- revoke pjcoders@gmail.com
+
+# Check current admin status
+npm run admin -- check pjcoders@gmail.com
+
+# List all current admins
+npm run admin -- list
+```
+
+What the script does:
+- Calls `adminAuth.setCustomUserClaims(uid, { admin: true|false })` — stored permanently in Firebase Auth.
+- Mirrors the flag to `users/{uid}.isAdmin` in Firestore so the sidebar / admin-link UI updates instantly.
+- Calls `revokeRefreshTokens(uid)` to invalidate the user's current tokens so they pick up the new claim on the next refresh.
+- Works on any device after `npm install` — no separate service account JSON required, just `.env.local` with `FIREBASE_ADMIN_*`.
+
+The user must have signed in at least once (so a `users/{uid}` doc exists in Firebase Auth).
+
+### Add / Remove via the `ADMIN_EMAILS` env var (legacy fallback)
+
+For bootstrap or migration. **Requires a redeploy to take effect.**
+
+```env
+ADMIN_EMAILS=pjcoders@gmail.com,pjprogrammers@gmail.com
+```
+
+This is consulted as a fallback only — once a user has the `admin` custom claim, that's the source of truth.
+
+### Change the admin panel URL
+
+```env
+# .env.local
+ADMIN_PATH=super-secret-control     # default: admin
+```
+
+With `ADMIN_PATH` set to anything other than `admin`:
+- Visiting `/{ADMIN_PATH}` works (rewritten server-side to `/admin`).
+- Visiting `/admin` directly returns **404** — the route is blocked at the middleware level.
+- All internal links (sidebar, dashboard, admin-link) automatically use the obfuscated path.
+- The env value is **never** sent to the client bundle (server-only, no `NEXT_PUBLIC_` prefix).
+
+The default value `admin` keeps the original route working for development; switch to a custom value in production for obfuscation.
+
+### How the security layers stack
+
+| Layer | What it does |
+|---|---|
+| Middleware | Blocks `/admin` (or `/admin/*`) at the edge → 404 when obfuscation is enabled. |
+| Admin layout | Server-side `adminAuth.verifySessionCookie` + `admin` custom claim check. Non-admins see a fake 404 + `console.error` and the attempt is logged. |
+| API routes | `requireAdmin(request)` reads the `admin` claim from the verified ID token directly. No extra `getUser()` round-trip. Failed access is logged with uid, email, IP, UA. |
+| Firestore rules | `isAdmin()` checks the same `admin` custom claim on the user's ID token. |
+| Env whitelist | `ADMIN_EMAILS` env fallback consulted only if the claim is absent. |
 
 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px;">
 
@@ -425,11 +489,9 @@ OPENROUTER_API_KEY=sk-or-...
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloud
 CLOUDINARY_UPLOAD_PRESET=your-preset
 
-# ─── Admin Emails (comma-separated) ───
+# ─── Admin (server-only, never use NEXT_PUBLIC_ prefix) ───
 ADMIN_EMAILS=admin@example.com
-
-# ─── Admin Path Obfuscation ───
-NEXT_PUBLIC_ADMIN_PATH=your-secret-path
+ADMIN_PATH=your-secret-path
 ```
 
 </details>
@@ -463,6 +525,7 @@ Open [http://localhost:3000](http://localhost:3000) — your app is ready!
 | `npm run build` | Production build |
 | `npm run start` | Start production server |
 | `npm run lint` | Run ESLint |
+| `npm run admin -- <cmd> [email]` | Manage admin claims — `grant` / `revoke` / `check` / `list` |
 
 ---
 
@@ -559,8 +622,8 @@ Increment tokensUsedToday (FieldValue.increment)
 | `OPENROUTER_API_KEY` | ✅ | OpenRouter API key |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Optional | Cloudinary cloud name |
 | `CLOUDINARY_UPLOAD_PRESET` | Optional | Cloudinary upload preset |
-| `ADMIN_EMAILS` | Optional | Comma-separated admin email whitelist |
-| `NEXT_PUBLIC_ADMIN_PATH` | Optional | Admin path obfuscation (default: `admin`) |
+| `ADMIN_EMAILS` | Optional | Server-only comma-separated admin email whitelist (legacy fallback) |
+| `ADMIN_PATH` | Optional | Server-only admin URL obfuscation (default: `admin`). Hides the canonical `/admin` route. |
 
 ---
 
@@ -575,8 +638,9 @@ tavryne-ai/
 │   ├── lib/                   # Business logic, stores, hooks, utilities
 │   ├── middleware.ts          # Security & routing middleware
 │   └── css.d.ts              # CSS module type declaration
-├── firestore.rules           # Firestore security rules (197 lines)
+├── firestore.rules           # Firestore security rules (default-deny + admin claim check)
 ├── firestore.indexes.json    # Firestore composite indexes (8 indexes)
+├── scripts/                  # Standalone Node.js admin tooling (`npm run admin`)
 ├── tailwind.config.ts        # Tailwind configuration (129 lines)
 ├── next.config.ts            # Next.js configuration (78 lines)
 ├── tsconfig.json             # TypeScript configuration
@@ -596,7 +660,11 @@ tavryne-ai/
 - **Image Upload:** SSRF-protected via Cloudinary rehosting
 - **Secrets:** Auto-redacted in error messages (`lib/utils/sanitize.ts`)
 - **HTTPS:** Automatic HTTP → HTTPS redirect on Vercel
-- **Admin:** Obfuscated admin path + email whitelist
+- **Admin authorization:** Server-side signed `admin` custom claim + `isAdminEmail` env fallback
+- **Admin path obfuscation:** Middleware blocks `/admin` when `ADMIN_PATH` is set; only the env-configured path resolves
+- **Failed-access logging:** Every denied admin request logs uid, email, IP, UA, and reason to the server console
+- **Firestore rules:** Default-deny, immutable messages & snapshots, role/email/timestamp field validation
+- **Env hygiene:** No `NEXT_PUBLIC_ADMIN_PATH` or `NEXT_PUBLIC_ADMIN_EMAILS` — the obfuscation values never reach the client bundle
 
 ---
 

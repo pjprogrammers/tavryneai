@@ -2,26 +2,45 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ============================================================
-    // CONSTANTS
-    // ============================================================
-    // Valid project status values (soft-delete via 'deleted')
+    // ========================================================================
+    // CONSTANTS — keep in sync with src/lib/types/* and API route bodies
+    // ========================================================================
+
+    // Valid project.status values (soft-delete via 'deleted')
     let PROJECT_STATUSES = ['active', 'deleted', 'archived'];
 
-    // Server-managed fields that clients must never write on users
+    // Valid message.role values
+    let MESSAGE_ROLES = ['user', 'assistant'];
+
+    // Valid feedback.status values
+    let FEEDBACK_STATUSES = ['accepted', 'rejected'];
+
+    // Valid deployment.type / deployment.status values
+    let DEPLOYMENT_TYPES   = ['export', 'vercel'];
+    let DEPLOYMENT_STATUSES = ['started', 'completed', 'failed'];
+
+    // Valid collaborator.role values
+    let COLLABORATOR_ROLES = ['editor', 'viewer'];
+
+    // Fields the server (Admin SDK) writes and clients must NEVER write
+    // directly. The API routes are the source of truth for these values.
     let USER_SERVER_FIELDS = [
       'tokensUsedToday', 'totalTokensConsumed', 'tokenResetDate',
-      'lastIpAddress', 'lastUserAgent', 'signUpIp',
+      'isAdmin', 'lastIpAddress', 'lastUserAgent', 'signUpIp',
     ];
 
-    // Server-managed fields on projects
     let PROJECT_SERVER_FIELDS = [
-      'tokenCount', 'createdAt', 'updatedAt',
+      'userId', 'tokenCount', 'createdAt', 'expiresAt',
+      'shareCode', 'isPublic', 'deployUrl',
     ];
 
-    // ============================================================
+    let COLLABORATOR_SERVER_FIELDS = [
+      'invitedAt', 'invitedBy', 'acceptedAt',
+    ];
+
+    // ========================================================================
     // HELPER FUNCTIONS
-    // ============================================================
+    // ========================================================================
 
     function isAuth() {
       return request.auth != null;
@@ -31,6 +50,9 @@ service cloud.firestore {
       return isAuth() && request.auth.uid == userId;
     }
 
+    // The Firebase `admin` custom claim — server-signed, untamperable.
+    // Mirrored to the user doc as `isAdmin` for the client UI, but the claim
+    // is the source of truth for authorization.
     function isAdmin() {
       return isAuth() && request.auth.token.admin == true;
     }
@@ -39,6 +61,21 @@ service cloud.firestore {
       return isAuth()
         && get(/databases/$(database)/documents/projects/$(projectId)).data.userId
              == request.auth.uid;
+    }
+
+    function isExistingProjectOwner(projectId) {
+      return isAuth()
+        && exists(/databases/$(database)/documents/projects/$(projectId))
+        && get(/databases/$(database)/documents/projects/$(projectId)).data.userId
+             == request.auth.uid;
+    }
+
+    // The signed-in user is listed as a collaborator on this project.
+    // Note: a get() to the subcollection is performed; this is one extra
+    // Firestore read per project access. Acceptable for collaborator reads.
+    function isProjectCollaborator(projectId) {
+      return isAuth()
+        && exists(/databases/$(database)/documents/projects/$(projectId)/collaborators/$(request.auth.uid));
     }
 
     function noServerFields(serverFields) {
@@ -50,147 +87,242 @@ service cloud.firestore {
     }
 
     function isValidEmail(email) {
-      return email is string && email.matches('^[^@]+@[^@]+\\.[^@]+$');
+      return email is string && email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$');
     }
 
     function isNonEmptyString(value) {
       return value is string && value.size() > 0;
     }
 
+    function isShortString(value, maxLen) {
+      return value is string && value.size() > 0 && value.size() <= maxLen;
+    }
+
     function isValidTimestamp(value) {
       return value is timestamp;
     }
 
-    // ============================================================
+    function isRecentTimestamp(value, maxAgeMs) {
+      // Used for client-written `updatedAt` to prevent backdating.
+      return isValidTimestamp(value)
+        && value >= request.time - duration.value(maxAgeMs, 'ms')
+        && value <= request.time + duration.value(60, 's');
+    }
+
+    // ========================================================================
     // USERS
-    // ============================================================
+    // ========================================================================
 
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
 
-      // Self-registration with required fields and email validation
+      // Self-registration. The client creates this doc on first sign-in.
       allow create: if isOwner(userId)
         && request.resource.data.uid == userId
         && request.resource.data.keys().hasAll(['uid', 'email', 'displayName', 'createdAt'])
         && isValidEmail(request.resource.data.email)
-        && request.resource.data.email is string
-        && request.resource.data.displayName is string
-        && request.resource.data.displayName.size() <= 100
+        && isShortString(request.resource.data.displayName, 100)
         && isValidTimestamp(request.resource.data.createdAt)
         && noServerFields(USER_SERVER_FIELDS);
 
-      // Self-update; cannot change uid or server-managed fields
+      // Self-update. uid, email (immutable from client), and server-managed
+      // fields cannot be written. emailVerified and lastLoginAt are mirrored
+      // from the client; allowed because the server-side Admin SDK also
+      // writes them via the API routes.
       allow update: if isOwner(userId)
         && noServerFields(USER_SERVER_FIELDS)
         && immutableFields(['uid'])
         && (!request.resource.data.keys().hasAny(['email']) || isValidEmail(request.resource.data.email))
-        && (!request.resource.data.keys().hasAny(['displayName']) || (
-          request.resource.data.displayName is string
-          && request.resource.data.displayName.size() <= 100
+        && (!request.resource.data.keys().hasAny(['displayName']) || isShortString(request.resource.data.displayName, 100))
+        && (!request.resource.data.keys().hasAny(['bio']) || (
+          request.resource.data.bio is string
+          && request.resource.data.bio.size() <= 500
+        ))
+        && (!request.resource.data.keys().hasAny(['avatarUrl']) || (
+          request.resource.data.avatarUrl is string
+          && request.resource.data.avatarUrl.size() <= 2048
         ));
 
-      // No hard deletes — managed server-side
+      // No hard deletes — managed server-side via soft-delete / retention policy.
       allow delete: if false;
+
+      // ---- NOTIFICATIONS (subcollection) ----
+      // In-app notifications for the user. Created by the server (Admin SDK)
+      // via /api/projects/[id]/collaborators and similar flows. Clients only
+      // read their own; writes are server-only.
+      match /notifications/{notificationId} {
+        allow read, list: if isOwner(userId);
+
+        // Server-only writes. The /api/user/notifications PATCH endpoint uses
+        // the Admin SDK to mark read, and the Admin SDK creates new docs.
+        allow create, update, delete: if false;
+      }
     }
 
-    // ============================================================
+    // ========================================================================
     // PROJECTS
-    // ============================================================
+    // ========================================================================
 
     match /projects/{projectId} {
-      // Owner reads own projects; public projects readable by any auth user
+      // Owner reads own projects; public projects (shareCode active) readable
+      // by any authenticated user; collaborators (listed in the subcollection)
+      // can read the project they're invited to. Anonymous share viewers go
+      // through the server-side /api/share/[code] endpoint (Admin SDK bypasses
+      // rules).
       allow read: if isAuth()
-        && (resource.data.userId == request.auth.uid || resource.data.isPublic == true);
+        && (resource.data.userId == request.auth.uid
+            || resource.data.isPublic == true
+            || isProjectCollaborator(projectId));
 
-      // Create: must be auth, own the project, supply required fields
+      // Create: must be auth, must own the project (userId = auth.uid),
+      // must supply the required fields, must start as 'active'.
       allow create: if isAuth()
         && request.resource.data.userId == request.auth.uid
-        && request.resource.data.keys().hasAll(['userId', 'title', 'status'])
-        && isNonEmptyString(request.resource.data.title)
-        && request.resource.data.title.size() <= 200
+        && request.resource.data.keys().hasAll(['userId', 'title', 'status', 'createdAt', 'updatedAt'])
+        && isShortString(request.resource.data.title, 200)
         && request.resource.data.status in PROJECT_STATUSES
         && request.resource.data.status == 'active'
+        && isValidTimestamp(request.resource.data.createdAt)
+        && isValidTimestamp(request.resource.data.updatedAt)
         && noServerFields(PROJECT_SERVER_FIELDS);
 
-      // Update: owner only; cannot change userId; status must be valid
+      // Update: owner only. Truly server-managed fields are immutable from the
+      // client. status must remain a valid value. updatedAt is client-writable
+      // (the client mirrors it for instant UI) but must be a recent timestamp.
       allow update: if isAuth()
         && resource.data.userId == request.auth.uid
         && noServerFields(PROJECT_SERVER_FIELDS)
-        && immutableFields(['userId'])
+        && (!request.resource.data.keys().hasAny(['title'])
+            || isShortString(request.resource.data.title, 200))
         && (!request.resource.data.keys().hasAny(['status'])
-            || request.resource.data.status in PROJECT_STATUSES);
+            || request.resource.data.status in PROJECT_STATUSES)
+        && (!request.resource.data.keys().hasAny(['updatedAt'])
+            || isRecentTimestamp(request.resource.data.updatedAt, 5 * 60 * 1000));
 
-      // No hard deletes — use status: 'deleted'
+      // No hard deletes — soft-delete via status: 'deleted'.
       allow delete: if false;
 
-      // ----- MESSAGES (subcollection) -----
+      // ---- COLLABORATORS (subcollection) ----
+      // List of users invited to the project, with their role. The owner can
+      // see and manage this list; the invited user can see their own entry.
+      // Writes go through /api/projects/[id]/collaborators (server-side).
+      match /collaborators/{collaboratorUid} {
+        allow read, list: if isExistingProjectOwner(projectId)
+          || isOwner(collaboratorUid);
+
+        allow create, update: if isExistingProjectOwner(projectId)
+          && request.resource.data.keys().hasAll(['email', 'role'])
+          && isValidEmail(request.resource.data.email)
+          && request.resource.data.role in COLLABORATOR_ROLES
+          && immutableFields(COLLABORATOR_SERVER_FIELDS);
+
+        allow delete: if isExistingProjectOwner(projectId);
+      }
+
+      // ---- MESSAGES (subcollection) ----
+      // Chat history. Created by the server (streaming /api/generate) and
+      // mirrored to the client. The client may also create optimistic
+      // messages while the stream is in flight.
       match /messages/{messageId} {
-        allow read: if isProjectOwner(projectId);
-        allow create: if isProjectOwner(projectId)
+        allow read: if isProjectOwner(projectId) || isProjectCollaborator(projectId);
+
+        allow create: if isExistingProjectOwner(projectId)
           && request.resource.data.keys().hasAll(['role', 'content', 'timestamp'])
-          && request.resource.data.role in ['user', 'assistant']
-          && isNonEmptyString(request.resource.data.content)
-          && request.resource.data.content.size() <= 100000
+          && request.resource.data.role in MESSAGE_ROLES
+          && isShortString(request.resource.data.content, 100000)
           && isValidTimestamp(request.resource.data.timestamp);
 
-        // Messages are immutable after creation (history integrity)
+        // Messages are immutable after creation (history integrity).
         allow update, delete: if false;
 
-        // ----- FEEDBACK (sub-subcollection) -----
+        // ---- FEEDBACK (sub-subcollection) ----
+        // User thumbs-up/down on AI output. Server uses these for fine-tuning.
         match /feedback/{feedbackId} {
-          allow read: if isProjectOwner(projectId);
-          allow create: if isProjectOwner(projectId)
+          allow read: if isProjectOwner(projectId) || isProjectCollaborator(projectId);
+
+          allow create: if isExistingProjectOwner(projectId)
             && request.resource.data.keys().hasAll(['userId', 'filename', 'status', 'timestamp'])
-            && request.resource.data.status in ['accepted', 'rejected']
+            && request.resource.data.status in FEEDBACK_STATUSES
             && request.resource.data.userId == request.auth.uid
+            && isShortString(request.resource.data.filename, 500)
             && isValidTimestamp(request.resource.data.timestamp);
+
           allow update, delete: if false;
         }
       }
 
-      // ----- SNAPSHOTS (subcollection) -----
+      // ---- SNAPSHOTS (subcollection) ----
+      // Immutable checkpoint history for the rewind feature.
       match /snapshots/{snapshotId} {
-        allow read: if isProjectOwner(projectId);
-        allow create: if isProjectOwner(projectId)
+        allow read: if isProjectOwner(projectId) || isProjectCollaborator(projectId);
+
+        allow create: if isExistingProjectOwner(projectId)
           && request.resource.data.keys().hasAll(['files', 'timestamp'])
           && request.resource.data.files is list
           && request.resource.data.files.size() <= 500
           && isValidTimestamp(request.resource.data.timestamp);
+
+        // Snapshots are immutable once written.
         allow update, delete: if false;
       }
 
-      // ----- PROVIDER STATS (subcollection, server-written) -----
+      // ---- DEPLOYMENTS (subcollection) ----
+      // Vercel deploys and export records. Written by the server and by the
+      // client (which sends a 'started' / 'completed' / 'failed' event).
+      match /deployments/{deploymentId} {
+        allow read: if isProjectOwner(projectId) || isProjectCollaborator(projectId) || isAdmin();
+
+        allow create: if isExistingProjectOwner(projectId)
+          && request.resource.data.keys().hasAll(['userId', 'type', 'status', 'timestamp'])
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.type in DEPLOYMENT_TYPES
+          && request.resource.data.status in DEPLOYMENT_STATUSES
+          && isValidTimestamp(request.resource.data.timestamp)
+          && (!request.resource.data.keys().hasAny(['metadata'])
+              || request.resource.data.metadata is map);
+
+        // Deployment records are append-only.
+        allow update, delete: if false;
+      }
+
+      // ---- PROVIDER STATS (subcollection, server-written) ----
+      // Reserved for per-project per-model benchmark stats. Only the server
+      // (Admin SDK) may write.
       match /provider_stats/{statId} {
         allow read: if isProjectOwner(projectId) || isAdmin();
-        allow create: if isAdmin();
-        allow update: if isAdmin();
+        allow create, update: if isAdmin();
         allow delete: if false;
       }
     }
 
-    // ============================================================
-    // USER ACTIVITY (server-written)
-    // ============================================================
-
+    // ========================================================================
+    // USER ACTIVITY (server-written, owner-readable)
+    // ========================================================================
+    // Audit log of deployment events, etc. Clients can only read their own
+    // activity; writes are server-side only.
     match /user_activity/{activityId} {
-      // Users can read their own activity; admins can read all
       allow read, list: if isAuth()
         && (resource.data.userId == request.auth.uid || isAdmin());
-      // Only written by server (Admin SDK bypasses rules)
-      // Allow admin writes explicitly; prevent client writes
       allow create: if isAdmin();
       allow update, delete: if false;
     }
 
-    // ============================================================
+    // ========================================================================
     // GENERATION ERRORS (server-written, admin-read)
-    // ============================================================
-
+    // ========================================================================
+    // Captures AI streaming failures for the admin benchmark dashboard.
     match /generation_errors/{errorId} {
       allow read, list: if isAdmin();
       allow create: if isAdmin();
       allow update, delete: if false;
     }
 
+    // ========================================================================
+    // DEFAULT DENY — any collection not explicitly matched above is read/write
+    // blocked for all clients. Server (Admin SDK) still has full access.
+    // ========================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }

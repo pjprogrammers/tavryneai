@@ -32,9 +32,7 @@ export default function ForgotPasswordPage() {
         <div className="bg-card border border-border rounded-2xl p-8 shadow-xl">
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2 mb-6">
-              <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center">
-                <span className="text-white text-xs font-bold">T</span>
-              </div>
+              <img src="/icon-32x32.png" alt="" className="h-8 w-8 rounded-lg" />
               <span className="text-lg font-semibold text-foreground">TavryneAI</span>
             </Link>
             <h1 className="text-2xl font-bold text-foreground">Forgot password?</h1>

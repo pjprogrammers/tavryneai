@@ -2,23 +2,19 @@ import { create } from 'zustand';
 import { User, AuthProvider } from '@/lib/types/user';
 import { getFirebase, getFirebaseSync } from '@/lib/firebase/lazy';
 import { applyTheme, applyColorTheme } from '@/lib/utils/theme';
+import { evaluatePassword } from '@/lib/utils/password-strength';
 
 const sanitizeEmail = (email: string) => email.trim().toLowerCase();
 
-const validatePassword = (password: string, email?: string): string | null => {
+const validatePassword = (password: string, name?: string, email?: string): string | null => {
   if (!password) return 'Password is required.';
-  if (password.length < 10) return 'Password must be at least 10 characters long.';
-  if (password.length > 128) return 'Password is too long.';
-  if (/\s/.test(password)) return 'Password cannot contain spaces.';
-  if (!/[A-Z]/.test(password)) return 'Password must include at least 1 uppercase letter.';
-  if (!/[a-z]/.test(password)) return 'Password must include at least 1 lowercase letter.';
-  if (!/[0-9]/.test(password)) return 'Password must include at least 1 number.';
-  if (!/[!@#$%^&*(),.?":{}|<>_\-+=]/.test(password)) return 'Password must include at least 1 special character.';
-
-  const weakPasswords = ['1234567890', '123456789', 'password', 'password123', 'qwerty', '1111111111', '0000000000'];
-  if (weakPasswords.includes(password.toLowerCase())) return 'This password is too common. Choose a stronger one.';
-  if (email && password.toLowerCase().includes(email.split('@')[0])) return 'Password should not contain your email or name.';
-  if (/^(.)\1+$/.test(password)) return 'Password cannot be repetitive.';
+  const evaluation = evaluatePassword(password, { name, email });
+  if (!evaluation.isAcceptable) {
+    const firstFailedRequired = evaluation.rules.find((r) => r.required && !r.passed);
+    return firstFailedRequired?.label
+      ? `Password doesn't meet the rules: ${firstFailedRequired.label}.`
+      : 'Password is not strong enough.';
+  }
   return null;
 };
 
@@ -85,7 +81,7 @@ interface AuthState {
   refreshToken: () => Promise<void>;
   clearError: () => void;
   updateProfile: (data: { displayName?: string; avatarUrl?: string }) => Promise<void>;
-  updatePassword: (newPassword: string) => Promise<void>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   sendEmailVerification: () => Promise<void>;
   reloadAndCheckVerification: () => Promise<{ emailVerified: boolean }>;
@@ -136,6 +132,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           try {
             await firebaseUser.reload();
             const token = await firebaseUser.getIdToken(false);
+            const idTokenResult = await firebaseUser.getIdTokenResult();
+            const isAdminClaim = (idTokenResult?.claims as Record<string, unknown> | undefined)?.admin === true;
             const provider = mapProviderId(firebaseUser.providerData[0]?.providerId || 'email');
 
             const userRef = doc(db, 'users', firebaseUser.uid);
@@ -144,6 +142,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             let user: User;
             if (!userDoc.exists()) {
               user = makeUser(firebaseUser.uid, firebaseUser.email || '', firebaseUser.displayName || 'User', provider, firebaseUser.emailVerified);
+              user.isAdmin = isAdminClaim;
               await setDoc(userRef, { ...user, createdAt: serverTimestamp(), lastLoginAt: serverTimestamp() });
             } else {
               const existing = userDoc.data() as User;
@@ -161,8 +160,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 ...existing, displayName: firebaseUser.displayName || existing.displayName,
                 lastLoginAt: new Date(), emailVerified: firebaseUser.emailVerified || existing.emailVerified,
                 emailVerifiedAt: firebaseUser.emailVerified && !existing.emailVerified ? new Date() : existing.emailVerifiedAt,
+                isAdmin: isAdminClaim,
               };
-              // Apply saved preferences from Firestore
               const prefs = existing.preferences;
               if (prefs?.theme) {
                 localStorage.setItem('tavryne-theme', prefs.theme);
@@ -206,6 +205,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           set({ idToken: token });
         } catch {}
         if (!currentUser) return;
+        try {
+          const idTokenResult = await firebaseUser.getIdTokenResult();
+          const isAdminClaim = (idTokenResult?.claims as Record<string, unknown> | undefined)?.admin === true;
+          if (isAdminClaim !== currentUser.isAdmin) {
+            set({ user: { ...currentUser, isAdmin: isAdminClaim } });
+          }
+        } catch {}
         if (firebaseUser.emailVerified && !currentUser.emailVerified) {
           try {
             await setDoc(doc(db, 'users', firebaseUser.uid), { emailVerified: true, emailVerifiedAt: serverTimestamp() }, { merge: true });
@@ -231,15 +237,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (!cred) return;
       const { db, firestoreMod } = await getFirebase();
       const token = await cred.user.getIdToken();
+      const idTokenResult = await cred.user.getIdTokenResult();
+      const isAdminClaim = (idTokenResult?.claims as Record<string, unknown> | undefined)?.admin === true;
       const userRef = firestoreMod.doc(db, 'users', cred.user.uid);
       const userDoc = await firestoreMod.getDoc(userRef);
       if (!userDoc.exists()) {
         const user = makeUser(cred.user.uid, cred.user.email || '', cred.user.displayName || 'User', mapProviderId(cred.providerId || 'email'), true);
+        user.isAdmin = isAdminClaim;
         await firestoreMod.setDoc(userRef, { ...user, createdAt: firestoreMod.serverTimestamp(), lastLoginAt: firestoreMod.serverTimestamp() });
         set({ firebaseUser: cred.user, idToken: token, user, authError: null });
       } else {
         const existing = userDoc.data() as User;
-        const user = { ...existing, lastLoginAt: new Date() };
+        const user = { ...existing, lastLoginAt: new Date(), isAdmin: isAdminClaim };
         await firestoreMod.setDoc(userRef, { lastLoginAt: firestoreMod.serverTimestamp() }, { merge: true });
         set({ firebaseUser: cred.user, idToken: token, user, authError: null });
 
@@ -279,16 +288,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
       const { db, firestoreMod } = await getFirebase();
       const token = await cred.user.getIdToken();
+      const idTokenResult = await cred.user.getIdTokenResult();
+      const isAdminClaim = (idTokenResult?.claims as Record<string, unknown> | undefined)?.admin === true;
       const userRef = firestoreMod.doc(db, 'users', cred.user.uid);
       const userDoc = await firestoreMod.getDoc(userRef);
       let user: User;
       if (userDoc.exists()) {
         const existing = userDoc.data() as User;
-        user = { ...existing, lastLoginAt: new Date() };
+        user = { ...existing, lastLoginAt: new Date(), isAdmin: isAdminClaim };
         set({ firebaseUser: cred.user, idToken: token, user });
         firestoreMod.setDoc(userRef, { lastLoginAt: firestoreMod.serverTimestamp() }, { merge: true }).catch(() => {});
       } else {
         user = makeUser(cred.user.uid, cred.user.email || '', cred.user.displayName || 'User', 'email', cred.user.emailVerified);
+        user.isAdmin = isAdminClaim;
         set({ firebaseUser: cred.user, idToken: token, user });
         firestoreMod.setDoc(userRef, { ...user, createdAt: firestoreMod.serverTimestamp(), lastLoginAt: firestoreMod.serverTimestamp() }).catch(() => {});
       }
@@ -305,16 +317,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { auth, authMod, db, firestoreMod } = await getFirebase();
     try {
       const cleanEmail = sanitizeEmail(email);
-      const passwordError = validatePassword(password, cleanEmail);
+      const passwordError = validatePassword(password, displayName, cleanEmail);
       if (passwordError) {
         set({ authError: passwordError });
         throw new Error(passwordError);
       }
       const cred = await authMod.createUserWithEmailAndPassword(auth, cleanEmail, password);
       const token = await cred.user.getIdToken();
+      const idTokenResult = await cred.user.getIdTokenResult();
+      const isAdminClaim = (idTokenResult?.claims as Record<string, unknown> | undefined)?.admin === true;
       await authMod.updateProfile(cred.user, { displayName });
       await authMod.sendEmailVerification(cred.user);
       const user = makeUser(cred.user.uid, cred.user.email || '', displayName, 'email', false);
+      user.isAdmin = isAdminClaim;
       set({ firebaseUser: cred.user, idToken: token, user });
       firestoreMod.setDoc(firestoreMod.doc(db, 'users', cred.user.uid), {
         ...user, createdAt: firestoreMod.serverTimestamp(), lastLoginAt: firestoreMod.serverTimestamp(), verificationEmailSentAt: firestoreMod.serverTimestamp(),
@@ -393,17 +408,53 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  updatePassword: async (newPassword: string) => {
+  updatePassword: async (currentPassword: string, newPassword: string) => {
     const { firebaseUser } = get();
     if (!firebaseUser) throw new Error('Not authenticated');
+    if (!firebaseUser.email) throw new Error('Password changes are not available for this account');
+    if (!currentPassword) throw new Error('Please enter your current password');
+    if (!newPassword) throw new Error('Please enter a new password');
+    if (currentPassword === newPassword) {
+      const msg = 'Your new password must be different from your current password';
+      set({ authError: msg });
+      throw new Error(msg);
+    }
     set({ authError: null });
     try {
       const { authMod } = await getFirebase();
-      await authMod.updatePassword(firebaseUser, newPassword);
+      const { reauthenticateWithCredential, updatePassword: fbUpdatePassword } = authMod;
+      const credential = authMod.EmailAuthProvider.credential(firebaseUser.email, currentPassword);
+      await reauthenticateWithCredential(firebaseUser, credential);
+      await fbUpdatePassword(firebaseUser, newPassword);
+      await firebaseUser.getIdToken(true);
+      set({ authError: null });
     } catch (err: any) {
-      const msg = err.code === 'auth/requires-recent-login'
-        ? 'Please sign out and sign in again before changing your password'
-        : err.message || 'Failed to update password';
+      let msg: string;
+      switch (err?.code) {
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+        case 'auth/invalid-login-credentials':
+        case 'auth/user-mismatch':
+          msg = 'Current password is incorrect. Please try again.';
+          break;
+        case 'auth/weak-password':
+          msg = 'New password is too weak. Please choose a stronger one.';
+          break;
+        case 'auth/too-many-requests':
+          msg = 'Too many attempts. Please wait a moment and try again.';
+          break;
+        case 'auth/network-request-failed':
+          msg = 'Network error. Please check your connection and try again.';
+          break;
+        case 'auth/requires-recent-login':
+          msg = 'For your security, please sign out and sign in again before changing your password.';
+          break;
+        case 'auth/user-disabled':
+          msg = 'This account has been disabled. Contact support.';
+          break;
+        default:
+          msg = err?.message || 'Failed to update password. Please try again.';
+      }
       set({ authError: msg });
       throw new Error(msg);
     }
