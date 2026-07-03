@@ -110,8 +110,6 @@ export const metadata: Metadata = {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
       { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/icon-48x48.png', sizes: '48x48', type: 'image/png' },
-      { url: '/icon-96x96.png', sizes: '96x96', type: 'image/png' },
       { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
       { url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
     ],
@@ -178,9 +176,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/icon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/icon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="48x48" href="/icon-48x48.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="msapplication-TileColor" content="#7C3AED" />
         <meta name="msapplication-TileImage" content="/icon-144x144.png" />

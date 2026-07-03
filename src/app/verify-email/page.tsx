@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 import { Loader2, Mail, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
@@ -97,7 +98,7 @@ export default function VerifyEmailPage() {
       <div className="w-full max-w-md animate-slide-up-lg">
         <div className="bg-card border border-border rounded-2xl p-8 shadow-xl text-center">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <img src="/icon-32x32.png" alt="" className="h-8 w-8 rounded-lg" />
+            <Image src="/icon-32x32.png" alt="" width={32} height={32} className="h-8 w-8 rounded-lg" />
             <span className="text-lg font-semibold text-foreground">TavryneAI</span>
           </Link>
 

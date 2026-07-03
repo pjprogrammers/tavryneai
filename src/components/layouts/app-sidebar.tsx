@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/lib/store/useAuthStore';
@@ -61,7 +62,7 @@ export function AppSidebar({ adminPath = 'admin' }: { adminPath?: string }) {
       <aside className="hidden md:flex flex-col w-56 xl:w-60 border-r border-border bg-sidebar shrink-0" aria-label="Primary">
         <div className="flex items-center gap-2 px-4 h-14 border-b border-border">
           <Link href="/" className="flex items-center gap-2" aria-label="Tavryne AI home">
-            <img src="/icon-32x32.png" alt="" aria-hidden="true" className="h-7 w-7 rounded-lg" />
+            <Image src="/icon-32x32.png" alt="" aria-hidden="true" width={28} height={28} className="h-7 w-7 rounded-lg" />
             <span className="text-sm font-semibold text-foreground">TavryneAI</span>
           </Link>
         </div>

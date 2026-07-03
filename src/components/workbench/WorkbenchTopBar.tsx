@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -81,7 +82,7 @@ export function WorkbenchTopBar({
           aria-label="Back to dashboard"
           style={{ transform: 'perspective(400px) rotateX(8deg) rotateY(-8deg)' }}
         >
-          <img src="/icon-32x32.png" alt="" className="absolute inset-0 h-full w-full rounded-xl" />
+          <Image src="/icon-32x32.png" alt="" fill className="rounded-xl" sizes="36px" />
           <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-5 rounded-full bg-primary/40 blur-sm" />
         </Link>
 

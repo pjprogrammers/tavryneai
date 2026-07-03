@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,7 +33,7 @@ export default function ForgotPasswordPage() {
         <div className="bg-card border border-border rounded-2xl p-8 shadow-xl">
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2 mb-6">
-              <img src="/icon-32x32.png" alt="" className="h-8 w-8 rounded-lg" />
+              <Image src="/icon-32x32.png" alt="" width={32} height={32} className="h-8 w-8 rounded-lg" />
               <span className="text-lg font-semibold text-foreground">TavryneAI</span>
             </Link>
             <h1 className="text-2xl font-bold text-foreground">Forgot password?</h1>

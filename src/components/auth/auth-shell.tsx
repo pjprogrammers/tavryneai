@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 
 export interface AuthShellProps {
@@ -50,7 +51,7 @@ export function AuthShell({ title, subtitle, error, children, footer, heroTaglin
             <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl shadow-xl p-5 sm:p-7 md:p-8">
               <div className="text-center mb-6 sm:mb-8">
                 <Link href="/" className="inline-flex items-center gap-2 mb-4 sm:mb-6">
-                  <img src="/icon-32x32.png" alt="" className="h-8 w-8 rounded-lg" />
+                  <Image src="/icon-32x32.png" alt="" width={32} height={32} className="h-8 w-8 rounded-lg" />
                   <span className="text-base sm:text-lg font-semibold text-foreground">TavryneAI</span>
                 </Link>
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
@@ -93,7 +94,7 @@ function HeroPanel({
   return (
     <div className="hidden lg:flex lg:w-[44%] xl:w-[40%] 2xl:w-[36%] relative flex-col justify-between p-10 xl:p-14 2xl:p-20 border-r border-border bg-gradient-to-br from-card/40 via-background to-background">
       <Link href="/" className="inline-flex items-center gap-2.5">
-        <img src="/icon-48x48.png" alt="" className="h-10 w-10 rounded-xl shadow-lg" />
+        <Image src="/icon-48x48.png" alt="" width={48} height={48} className="h-10 w-10 rounded-xl shadow-lg" />
         <span className="text-xl font-semibold text-foreground">TavryneAI</span>
       </Link>
 

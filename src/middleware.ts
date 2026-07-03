@@ -36,9 +36,15 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const response = NextResponse.next();
 
-  // Fix Turbopack serving CSS with wrong MIME type
-  if (pathname.startsWith('/_next/static') && pathname.endsWith('.css')) {
-    response.headers.set('Content-Type', 'text/css');
+  // Fix Turbopack serving CSS/JS with wrong MIME type
+  if (pathname.startsWith('/_next/static')) {
+    if (pathname.endsWith('.css')) {
+      response.headers.set('Content-Type', 'text/css');
+    } else if (pathname.endsWith('.js')) {
+      response.headers.set('Content-Type', 'application/javascript');
+    } else {
+      return response;
+    }
     return response;
   }
 
@@ -73,7 +79,8 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|ico|js|woff|woff2|ttf)).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf)).*)',
     '/_next/static/:path*.css',
+    '/_next/static/:path*.js',
   ],
 };
