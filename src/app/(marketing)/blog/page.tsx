@@ -4,14 +4,50 @@ import Link from 'next/link';
 const SITE_URL = 'https://tavryneai.vercel.app';
 
 export const metadata: Metadata = {
-  title: 'Blog | Tavryne AI — Vibe Coding Tips & AI Development Guides',
-  description:
-    'Learn about AI vibe coding, Tavryne AI tips and tutorials, browser-based AI development best practices, and generative coding techniques.',
+  title: 'Blog',
+  description: 'Guides, tutorials, and insights for building websites, web apps, and SaaS products with AI. Learn how Tavryne AI helps you build through natural conversation — no coding required.',
   alternates: { canonical: `${SITE_URL}/blog` },
   openGraph: {
-    title: 'Blog | Tavryne AI',
-    description: 'AI vibe coding guides, tips, and tutorials for the Tavryne AI platform.',
+    title: 'Blog | Tavryne AI – AI Website & App Builder',
+    description: 'Guides, tutorials, and insights for building websites, web apps, and SaaS products with AI through natural conversation. No coding required.',
     url: `${SITE_URL}/blog`,
+    type: 'website',
+    siteName: 'Tavryne AI',
+    locale: 'en_US',
+    images: [
+      {
+        url: `${SITE_URL}/ogimage.png`,
+        width: 1024,
+        height: 541,
+        alt: 'Tavryne AI Blog',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@tavryneai',
+    creator: '@tavryneai',
+    title: 'Blog | Tavryne AI – AI Website & App Builder',
+    description: 'Guides, tutorials, and insights for building websites, web apps, and SaaS products with AI through natural conversation. No coding required.',
+    images: [`${SITE_URL}/ogimage.png`],
+  },
+  keywords: [
+    'AI blog',
+    'build apps with AI',
+    'AI development guides',
+    'Tavryne AI tutorials',
+    'AI-powered development',
+  ],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 

@@ -25,7 +25,7 @@ const fadeUp = {
 };
 
 const features = [
-  { title: 'Natural Language Prompts', description: 'Describe your app in plain English. TavryneAI generates production-ready code.', icon: 'chat' },
+  { title: 'Natural Language Prompts', description: 'Describe your website or app in plain English. TavryneAI generates production-ready code. Build websites using AI.', icon: 'chat' },
   { title: 'Multi-Provider AI', description: 'Routes through NVIDIA NIM, OpenCode Zen, and OpenRouter for best results.', icon: 'neurology' },
   { title: 'Live Code Preview', description: 'See your app come to life instantly with esbuild-wasm in-browser bundling.', icon: 'play_circle' },
   { title: 'Monaco Editor', description: 'Full-featured code editor with syntax highlighting, intellisense, and diff views.', icon: 'code' },
@@ -66,6 +66,10 @@ const faqItems = [
   {
     q: 'What kind of apps can I build with Tavryne AI?',
     a: 'You can build full-stack web applications including React, Next.js, and TypeScript projects. Tavryne AI handles routing, components, styling, and backend logic through conversation.',
+  },
+  {
+    q: 'Can I build websites with AI using Tavryne?',
+    a: 'Absolutely! Tavryne AI is the perfect AI website builder. Just describe the website you want — landing pages, SaaS apps, portfolios, e-commerce stores — and Tavryne creates them using AI. Build websites using AI with no coding required.',
   },
 ];
 
@@ -153,15 +157,15 @@ export default function LandingClient() {
             >
               <span className="gradient-text">Turn any idea</span>
               <br />
-              <span className="text-foreground">into a working app</span>
+              <span className="text-foreground">into a working website or app</span>
             </motion.h1>
 
             <motion.p
               variants={fadeUp}
               className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
             >
-              Just describe what you want to build. <strong>Tavryne AI</strong> generates production-ready code
-              through conversation &mdash; powered by NVIDIA NIM, OpenCode Zen, and OpenRouter.
+              Describe the website or app you want to build. <strong>Tavryne AI</strong> generates production-ready code
+              through conversation &mdash; build websites using AI powered by NVIDIA NIM, OpenCode Zen, and OpenRouter.
             </motion.p>
 
             {showHeroCta && (
@@ -227,7 +231,7 @@ export default function LandingClient() {
               Everything you need to build with Tavryne AI
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              A complete AI vibe coding platform for turning ideas into production applications through natural conversation.
+              Build websites and apps using AI with Tavryne — a complete AI vibe coding platform for turning ideas into production applications through natural conversation.
             </p>
           </motion.div>
 
@@ -266,7 +270,7 @@ export default function LandingClient() {
           >
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">How Tavryne AI works</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              From idea to working app in four simple steps using the Tavryne AI vibe coding platform.
+              From idea to working website or app in four simple steps using the Tavryne AI vibe coding platform. Create websites with AI in minutes.
             </p>
           </motion.div>
 
@@ -410,11 +414,11 @@ export default function LandingClient() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-              Ready to build something amazing with Tavryne AI?
+              Ready to build websites with AI using Tavryne AI?
             </h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join thousands of developers using <strong>Tavryne AI</strong> to turn their ideas into working apps.
-              No setup, no configuration. Just describe what you want and let AI build it.
+              Join thousands of developers using <strong>Tavryne AI</strong> to turn their ideas into working websites and apps.
+              No setup, no configuration. Just describe what you want and let AI build it. Build with AI, launch in minutes.
             </p>
             <Link href="/register">
               <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-lg rounded-xl shadow-xl shadow-primary/25">
@@ -434,7 +438,7 @@ export default function LandingClient() {
                 <span className="text-sm font-semibold text-foreground">Tavryne AI</span>
               </div>
               <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">
-                Tavryne AI is the browser-based AI vibe coding platform that turns ideas into production-ready apps through natural conversation. Powered by NVIDIA NIM, OpenCode Zen, and OpenRouter.
+                Tavryne AI is the browser-based AI platform to build websites and apps through natural conversation. Create websites with AI and turn ideas into production-ready apps. Powered by NVIDIA NIM, OpenCode Zen, and OpenRouter.
               </p>
             </div>
             <div>

@@ -27,6 +27,11 @@ const faqQuestions = [
     answer:
       'Yes, you can export your project or deploy directly to Vercel with one click. Tavryne AI generates production-ready code that you can host anywhere.',
   },
+  {
+    question: 'Can I build websites with AI using Tavryne?',
+    answer:
+      'Absolutely! Tavryne AI is the perfect AI website builder. Just describe the website you want — landing pages, SaaS apps, portfolios, e-commerce stores — and Tavryne creates them using AI. Build websites using AI with no coding required.',
+  },
 ];
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {

@@ -11,15 +11,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { code } = await params;
 
   return {
-    title: `Shared Session — ${code} | Tavryne AI`,
-    description:
-      'View a shared Tavryne AI coding session. See how AI-generated code was created through natural conversation in the Tavryne AI vibe coding platform.',
+    title: `Shared Session — ${code}`,
+    description: 'View a shared AI-built project created with Tavryne AI. See how websites, web apps, and SaaS products are built through natural conversation — no coding required.',
     alternates: { canonical: `${SITE_URL}/share/${code}` },
     openGraph: {
-      title: `Shared Tavryne AI Session — ${code}`,
-      description: 'Explore an AI-generated project built with Tavryne AI. See the conversation and code that created it.',
+      title: `Shared Session — ${code} | Tavryne AI`,
+      description: 'View a shared AI-built project created with Tavryne AI. See how websites, web apps, and SaaS products are built through natural conversation — no coding required.',
       url: `${SITE_URL}/share/${code}`,
       type: 'article',
+      siteName: 'Tavryne AI',
+      locale: 'en_US',
+      images: [
+        {
+          url: `${SITE_URL}/ogimage.png`,
+          width: 1024,
+          height: 541,
+          alt: 'Shared Tavryne AI Session',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      site: '@tavryneai',
+      creator: '@tavryneai',
+      title: `Shared Session — ${code} | Tavryne AI`,
+      description: 'View a shared AI-built project created with Tavryne AI. See how websites, web apps, and SaaS products are built through natural conversation — no coding required.',
+      images: [`${SITE_URL}/ogimage.png`],
     },
     robots: {
       index: false,

@@ -9,7 +9,7 @@ import { ChunkErrorHandler } from '@/components/shared/ChunkErrorHandler';
 
 const SITE_URL = 'https://tavryneai.vercel.app';
 const SITE_NAME = 'Tavryne AI';
-const SITE_DESCRIPTION = 'Turn any idea into a working app through conversation. Tavryne AI is the browser-based AI vibe coding platform that generates production-ready code with natural language. Free tier with 10,000 tokens daily. No credit card needed.';
+const SITE_DESCRIPTION = 'Build production-ready websites, web apps, and SaaS products with AI through natural conversation. No coding required.';
 const OG_IMAGE = '/ogimage.png';
 const OG_IMAGE_WIDTH = 1024;
 const OG_IMAGE_HEIGHT = 541;
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   applicationName: 'Tavryne AI',
   title: {
-    default: 'Tavryne AI — AI Vibe Coding Platform | Turn Ideas Into Apps',
+    default: 'Tavryne AI – AI Website & App Builder',
     template: '%s | Tavryne AI',
   },
   description: SITE_DESCRIPTION,
@@ -55,9 +55,19 @@ export const metadata: Metadata = {
     'Tavryne AI IDE',
     'Tavryne Coding AI',
     'Tavryne AI Platform',
+    'tavryne create websites',
+    'tavryne website builder',
     'vibe coding platform',
     'AI coding assistant',
     'AI development environment',
+    'build websites using AI',
+    'build with AI',
+    'AI website builder',
+    'create websites with AI',
+    'AI website generator',
+    'AI website creator',
+    'website building AI',
+    'build website with AI',
     'browser-based AI IDE',
     'natural language programming',
     'AI code generation',
@@ -114,7 +124,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: 'Tavryne AI — AI Vibe Coding Platform | Turn Ideas Into Apps',
+    title: 'Tavryne AI – AI Website & App Builder',
     description: SITE_DESCRIPTION,
     images: [
       {
@@ -122,7 +132,7 @@ export const metadata: Metadata = {
         secureUrl: `${SITE_URL}${OG_IMAGE}`,
         width: OG_IMAGE_WIDTH,
         height: OG_IMAGE_HEIGHT,
-        alt: 'Tavryne AI — Browser-Based AI Vibe Coding Platform',
+        alt: 'Tavryne AI - AI website and app builder, no coding required',
         type: 'image/jpeg',
       },
     ],
@@ -133,12 +143,12 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@tavryneai',
     creator: '@tavryneai',
-    title: 'Tavryne AI — AI Vibe Coding Platform | Turn Ideas Into Apps',
+    title: 'Tavryne AI – AI Website & App Builder',
     description: SITE_DESCRIPTION,
     images: [
       {
         url: OG_IMAGE,
-        alt: 'Tavryne AI — AI Vibe Coding Platform',
+        alt: 'Tavryne AI - Build apps with AI',
       },
     ],
   },
@@ -152,6 +162,9 @@ export const metadata: Metadata = {
       url: SITE_URL,
       should_fallback: true,
     },
+  },
+  verification: {
+    google: 'yD0EuT3GHCroc_8sUd70Nt-puSwrlKEdsar7YRDcx_M',
   },
   other: {
     'og:email': 'support@tavryneai.com',

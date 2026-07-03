@@ -5,14 +5,12 @@ import { JsonLd } from '@/components/seo/JsonLd';
 const SITE_URL = 'https://tavryneai.vercel.app';
 
 export const metadata: Metadata = {
-  title: 'About Us | Tavryne AI',
-  description:
-    'Learn about Tavryne AI — the browser-based AI vibe coding platform that turns ideas into production-ready apps through natural conversation. Discover our mission, technology, and team.',
+  title: 'About',
+  description: 'Learn about Tavryne AI — the AI website and app builder that lets you build production-ready web apps and SaaS products through natural conversation. No coding required.',
   alternates: { canonical: `${SITE_URL}/about` },
   openGraph: {
-    title: 'About Tavryne AI — Browser-Based AI Vibe Coding Platform',
-    description:
-      'Discover how Tavryne AI is redefining software development with multi-provider AI routing, browser-based IDE, and natural language programming. Learn about our mission, technology, and vision.',
+    title: 'About Tavryne AI – AI Website & App Builder',
+    description: 'Learn about Tavryne AI, the AI website and app builder. Build production-ready web apps and SaaS products through natural conversation. No coding required.',
     url: `${SITE_URL}/about`,
     type: 'website',
     siteName: 'Tavryne AI',
@@ -22,7 +20,7 @@ export const metadata: Metadata = {
         url: `${SITE_URL}/ogimage.png`,
         width: 1024,
         height: 541,
-        alt: 'About Tavryne AI — AI Vibe Coding Platform',
+        alt: 'About Tavryne AI - Build apps with AI',
       },
     ],
   },
@@ -30,21 +28,15 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@tavryneai',
     creator: '@tavryneai',
-    title: 'About Tavryne AI — Browser-Based AI Vibe Coding Platform',
-    description:
-      'Discover how Tavryne AI is redefining software development with multi-provider AI routing, browser-based IDE, and natural language programming.',
+    title: 'About Tavryne AI – AI Website & App Builder',
+    description: 'Learn about Tavryne AI, the AI website and app builder. Build production-ready web apps and SaaS products through natural conversation. No coding required.',
     images: [`${SITE_URL}/ogimage.png`],
   },
   keywords: [
     'about Tavryne AI',
-    'AI coding platform team',
-    'browser-based AI IDE',
-    'vibe coding company',
-    'AI development platform',
-    'generative AI coding startup',
-    'multi-provider AI routing',
-    'NVIDIA NIM AI coding',
-    'conversational programming platform',
+    'AI app development platform',
+    'build apps with AI',
+    'AI-powered development',
   ],
   robots: {
     index: true,

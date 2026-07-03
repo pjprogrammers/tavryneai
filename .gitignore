@@ -57,6 +57,7 @@ pglite-debug.log
 storage-debug.log
 
 # internal docs (don't push)
+.playwright-mcp/
 /AGENTS.md
 /IMPLEMENTATION_PLAN.md
 

@@ -2,8 +2,28 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: '404 — Page Not Found | Tavryne AI',
-  description: 'The page you are looking for does not exist. Return to the Tavryne AI homepage to start building with AI.',
+  title: '404 — Page Not Found',
+  description: 'Page not found. Return to Tavryne AI, the AI website and app builder. Build production-ready web apps and SaaS products with AI through natural conversation — no coding required.',
+  openGraph: {
+    title: '404 — Page Not Found | Tavryne AI',
+    description: 'Page not found. Return to Tavryne AI, the AI website and app builder. Build production-ready web apps and SaaS products with AI through natural conversation.',
+    type: 'website',
+    siteName: 'Tavryne AI',
+    images: [
+      {
+        url: 'https://tavryneai.vercel.app/ogimage.png',
+        width: 1024,
+        height: 541,
+        alt: 'Tavryne AI - Build apps with AI',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '404 — Page Not Found | Tavryne AI',
+    description: 'Page not found. Return to Tavryne AI, the AI website and app builder. Build production-ready web apps and SaaS products with AI through natural conversation.',
+    images: ['https://tavryneai.vercel.app/ogimage.png'],
+  },
   robots: { index: false, follow: true },
 };
 

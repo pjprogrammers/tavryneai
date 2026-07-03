@@ -7,12 +7,12 @@ const SITE_URL = 'https://tavryneai.vercel.app';
 export const metadata: Metadata = {
   title: 'Privacy Policy | Tavryne AI',
   description:
-    'Tavryne AI Privacy Policy. Learn how we collect, use, store, and protect your personal data when you use our AI vibe coding platform. GDPR and CCPA compliant.',
+    'Privacy Policy for Tavryne AI, the AI website and app builder. Learn how we collect, use, store, and protect your personal data when you build websites and apps with AI. GDPR and CCPA compliant.',
   alternates: { canonical: `${SITE_URL}/privacy` },
   openGraph: {
     title: 'Privacy Policy | Tavryne AI',
     description:
-      'Comprehensive privacy policy detailing how Tavryne AI collects, uses, stores, and protects your personal data. Includes information about GDPR and CCPA rights.',
+      'Privacy Policy for Tavryne AI, the AI website and app builder. Learn how we protect your personal data when you build websites, web apps, and SaaS products with AI.',
     url: `${SITE_URL}/privacy`,
     type: 'website',
     siteName: 'Tavryne AI',
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     creator: '@tavryneai',
     title: 'Privacy Policy | Tavryne AI',
     description:
-      'Comprehensive privacy policy detailing how Tavryne AI collects, uses, stores, and protects your personal data.',
+      'Privacy Policy for Tavryne AI, the AI website and app builder. Learn how we protect your personal data when you build websites and apps with AI.',
     images: [`${SITE_URL}/ogimage.png`],
   },
   robots: {

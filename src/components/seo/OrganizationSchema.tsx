@@ -22,11 +22,14 @@ export function OrganizationSchema() {
         ],
         foundingDate: '2025',
         knowsAbout: [
+          'AI website builder',
           'AI coding assistant',
           'vibe coding platform',
+          'build websites using AI',
           'browser-based IDE',
           'generative AI development',
           'natural language programming',
+          'AI website generator',
         ],
         offers: {
           '@type': 'Offer',

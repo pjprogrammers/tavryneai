@@ -11,7 +11,7 @@ export function WebsiteSchema() {
         '@type': 'WebSite',
         '@id': `${SITE_URL}/#website`,
         name: 'Tavryne AI',
-        alternateName: ['TavryneAI', 'Tavryne', 'Tavryne Vibe Code'],
+        alternateName: ['TavryneAI', 'Tavryne', 'Tavryne Vibe Code', 'AI website builder', 'build websites using AI'],
         url: SITE_URL,
         description:
           'Turn any idea into a working app through conversation. Tavryne AI is the AI vibe coding platform for everyone.',

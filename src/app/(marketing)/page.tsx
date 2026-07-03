@@ -4,9 +4,9 @@ import LandingClient from './LandingClient';
 const SITE_URL = 'https://tavryneai.vercel.app';
 
 export const metadata: Metadata = {
-  title: 'Tavryne AI — Turn Ideas Into Apps with AI Vibe Coding',
+  title: 'Tavryne AI – AI Website & App Builder',
   description:
-    'Tavryne AI is the browser-based AI vibe coding platform that generates production-ready apps through natural conversation. Powered by NVIDIA NIM, OpenCode Zen, and OpenRouter. Start building free, no credit card needed.',
+    'Build production-ready websites, web apps, and SaaS products with AI through natural conversation. No coding required.',
   keywords: [
     'Tavryne AI',
     'Tavryne',
@@ -15,9 +15,19 @@ export const metadata: Metadata = {
     'Tavryne AI IDE',
     'Tavryne Coding AI',
     'Tavryne AI Platform',
+    'tavryne create websites',
+    'tavryne website builder',
     'vibe coding platform',
     'AI coding assistant',
     'AI development environment',
+    'build websites using AI',
+    'build with AI',
+    'AI website builder',
+    'create websites with AI',
+    'AI website generator',
+    'AI website creator',
+    'website building AI',
+    'build website with AI',
     'browser-based AI IDE',
     'natural language programming',
     'AI SaaS builder',
@@ -27,9 +37,9 @@ export const metadata: Metadata = {
     'no-code AI platform',
   ],
   openGraph: {
-    title: 'Tavryne AI — Turn Ideas Into Apps with AI Vibe Coding',
+    title: 'Tavryne AI – AI Website & App Builder',
     description:
-      'Describe what you want to build. Tavryne AI generates production-ready code through conversation. Free tier with 10,000 tokens daily.',
+      'Build production-ready websites, web apps, and SaaS products with AI through natural conversation. No coding required.',
     url: SITE_URL,
     siteName: 'Tavryne AI',
     images: [
@@ -37,15 +47,15 @@ export const metadata: Metadata = {
         url: `${SITE_URL}/ogimage.png`,
         width: 1024,
         height: 541,
-        alt: 'Tavryne AI — AI Vibe Coding Platform',
+        alt: 'Tavryne AI - AI website and app builder, no coding required',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Tavryne AI — Turn Ideas Into Apps with AI Vibe Coding',
+    title: 'Tavryne AI – AI Website & App Builder',
     description:
-      'Describe what you want to build. Tavryne AI generates production-ready code through conversation. Free tier with 10,000 tokens daily.',
+      'Build production-ready websites, web apps, and SaaS products with AI through natural conversation. No coding required.',
     images: [`${SITE_URL}/ogimage.png`],
   },
   alternates: {

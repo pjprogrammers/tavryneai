@@ -7,10 +7,9 @@ const SITE_URL = 'https://tavryneai.vercel.app';
 export const metadata: Metadata = {
   title: {
     default: 'Dashboard',
-    template: '%s',
+    template: '%s | Tavryne AI',
   },
-  description:
-    'Tavryne AI dashboard. Access your projects, manage your account, track token usage, and continue building with the AI vibe coding platform.',
+  description: 'Your Tavryne AI dashboard. Access your AI-built projects, track token usage, and continue building production-ready websites, web apps, and SaaS products with AI.',
   robots: {
     index: false,
     follow: false,
@@ -19,33 +18,6 @@ export const metadata: Metadata = {
       index: false,
       follow: false,
     },
-  },
-  alternates: {
-    canonical: `${SITE_URL}/dashboard`,
-  },
-  openGraph: {
-    title: 'Dashboard | Tavryne AI',
-    description: 'Access your projects, manage your account, and continue building with Tavryne AI.',
-    url: `${SITE_URL}/dashboard`,
-    type: 'website',
-    siteName: 'Tavryne AI',
-    images: [
-      {
-        url: `${SITE_URL}/ogimage.png`,
-        secureUrl: `${SITE_URL}/ogimage.png`,
-        width: 1024,
-        height: 541,
-        alt: 'Tavryne AI Dashboard',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    site: '@tavryneai',
-    creator: '@tavryneai',
-    title: 'Dashboard | Tavryne AI',
-    description: 'Access your projects and continue building with Tavryne AI.',
-    images: [`${SITE_URL}/ogimage.png`],
   },
 };
 

@@ -7,12 +7,12 @@ const SITE_URL = 'https://tavryneai.vercel.app';
 export const metadata: Metadata = {
   title: 'Terms of Service | Tavryne AI',
   description:
-    'Tavryne AI Terms of Service. Read the terms governing your use of our AI vibe coding platform, including account registration, acceptable use, intellectual property, and liability limitations.',
+    'Terms of Service for Tavryne AI, the AI website and app builder. Read the terms governing your use of the platform, including account registration, acceptable use, and intellectual property.',
   alternates: { canonical: `${SITE_URL}/terms` },
   openGraph: {
     title: 'Terms of Service | Tavryne AI',
     description:
-      'Complete terms of service for Tavryne AI. Including account terms, acceptable use, intellectual property, subscription billing, and disclaimer of warranties.',
+      'Terms of Service for Tavryne AI, the AI website and app builder. Read the terms governing your use of the AI-powered development platform.',
     url: `${SITE_URL}/terms`,
     type: 'website',
     siteName: 'Tavryne AI',
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     creator: '@tavryneai',
     title: 'Terms of Service | Tavryne AI',
     description:
-      'Complete terms of service for Tavryne AI. Including account terms, acceptable use, intellectual property, subscription billing, and disclaimer of warranties.',
+      'Terms of Service for Tavryne AI, the AI website and app builder. Read the terms governing your use of the AI-powered development platform.',
     images: [`${SITE_URL}/ogimage.png`],
   },
   robots: {
