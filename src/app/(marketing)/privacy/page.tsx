@@ -19,9 +19,9 @@ export const metadata: Metadata = {
     locale: 'en_US',
     images: [
       {
-        url: `${SITE_URL}/ogimage.png`,
-        width: 1024,
-        height: 541,
+        url: `${SITE_URL}/opengraph-image`,
+        width: 1200,
+        height: 630,
         alt: 'Tavryne AI Privacy Policy',
       },
     ],
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     title: 'Privacy Policy | Tavryne AI',
     description:
       'Privacy Policy for Tavryne AI, the AI website and app builder. Learn how we protect your personal data when you build websites and apps with AI.',
-    images: [`${SITE_URL}/ogimage.png`],
+    images: [`${SITE_URL}/opengraph-image`],
   },
   robots: {
     index: true,

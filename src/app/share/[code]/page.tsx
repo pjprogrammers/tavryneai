@@ -23,9 +23,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale: 'en_US',
       images: [
         {
-          url: `${SITE_URL}/ogimage.png`,
-          width: 1024,
-          height: 541,
+          url: `${SITE_URL}/opengraph-image`,
+          width: 1200,
+          height: 630,
           alt: 'Shared Tavryne AI Session',
         },
       ],
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       creator: '@tavryneai',
       title: `Shared Session — ${code} | Tavryne AI`,
       description: 'View a shared AI-built project created with Tavryne AI. See how websites, web apps, and SaaS products are built through natural conversation — no coding required.',
-      images: [`${SITE_URL}/ogimage.png`],
+      images: [`${SITE_URL}/opengraph-image`],
     },
     robots: {
       index: false,

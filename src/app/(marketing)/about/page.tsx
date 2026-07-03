@@ -17,9 +17,9 @@ export const metadata: Metadata = {
     locale: 'en_US',
     images: [
       {
-        url: `${SITE_URL}/ogimage.png`,
-        width: 1024,
-        height: 541,
+        url: `${SITE_URL}/opengraph-image`,
+        width: 1200,
+        height: 630,
         alt: 'About Tavryne AI - Build apps with AI',
       },
     ],
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     creator: '@tavryneai',
     title: 'About Tavryne AI – AI Website & App Builder',
     description: 'Learn about Tavryne AI, the AI website and app builder. Build production-ready web apps and SaaS products through natural conversation. No coding required.',
-    images: [`${SITE_URL}/ogimage.png`],
+    images: [`${SITE_URL}/opengraph-image`],
   },
   keywords: [
     'about Tavryne AI',

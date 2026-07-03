@@ -10,9 +10,9 @@ import { ChunkErrorHandler } from '@/components/shared/ChunkErrorHandler';
 const SITE_URL = 'https://tavryneai.vercel.app';
 const SITE_NAME = 'Tavryne AI';
 const SITE_DESCRIPTION = 'Build production-ready websites, web apps, and SaaS products with AI through natural conversation. No coding required.';
-const OG_IMAGE = '/ogimage.png';
-const OG_IMAGE_WIDTH = 1024;
-const OG_IMAGE_HEIGHT = 541;
+const OG_IMAGE = '/opengraph-image';
+const OG_IMAGE_WIDTH = 1200;
+const OG_IMAGE_HEIGHT = 630;
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -133,7 +133,7 @@ export const metadata: Metadata = {
         width: OG_IMAGE_WIDTH,
         height: OG_IMAGE_HEIGHT,
         alt: 'Tavryne AI - AI website and app builder, no coding required',
-        type: 'image/jpeg',
+        type: 'image/png',
       },
     ],
     countryName: 'United States',

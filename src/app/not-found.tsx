@@ -11,9 +11,9 @@ export const metadata: Metadata = {
     siteName: 'Tavryne AI',
     images: [
       {
-        url: 'https://tavryneai.vercel.app/ogimage.png',
-        width: 1024,
-        height: 541,
+        url: 'https://tavryneai.vercel.app/opengraph-image',
+        width: 1200,
+        height: 630,
         alt: 'Tavryne AI - Build apps with AI',
       },
     ],
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '404 — Page Not Found | Tavryne AI',
     description: 'Page not found. Return to Tavryne AI, the AI website and app builder. Build production-ready web apps and SaaS products with AI through natural conversation.',
-    images: ['https://tavryneai.vercel.app/ogimage.png'],
+    images: ['https://tavryneai.vercel.app/opengraph-image'],
   },
   robots: { index: false, follow: true },
 };
